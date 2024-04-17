@@ -31,7 +31,12 @@ def find_camera_id(camera_name):
     return i
 
 def main():
- 
+
+    try:
+        os.mkdir("photo")
+    except OSError as error:  
+        print(error)
+
     camera_name="HD USB Camera"
     device_id=find_camera_id(camera_name)
 
@@ -63,7 +68,7 @@ def main():
         key = cv2.waitKey(1)
         if key == ord('p'):
             # Save the frame as an image
-            cv2.imwrite(get_data()+".jpg", frame)
+            cv2.imwrite("photo/" + get_data()+".jpg", frame)
 
         # Check for 'q' key to exit the loop
         if key & 0xFF == ord('q'):
