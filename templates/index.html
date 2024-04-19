@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Streaming</title>
+    <style>
+        /* Define a CSS class for increasing font size */
+        .large-font {
+            font-size: 36px; /* Adjust font size as needed */
+        }
+
+        /* Define a CSS class for increasing button size */
+        .large-button {
+            font-size: 24px; /* Adjust font size as needed */
+            padding: 20px 40px; /* Adjust padding as needed */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 offset-lg-2">
+                <!-- Apply the CSS class to your heading -->
+                <h3 class="mt-5 large-font">PROTO-0 </h3>
+                <img id="video_feed" src="{{ url_for('video_feed') }}" width="50%">
+                <!-- Add a button to take a picture -->
+                <button id="take_picture" class="large-button">PHOTO!!!</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        // Add event listener to the button
+        document.getElementById("take_picture").addEventListener("click", function() {
+            // Send an AJAX request to the Flask server to take a picture
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", "/take_picture");
+            xhr.send();
+        });
+    </script>
+</body>
+</html>
