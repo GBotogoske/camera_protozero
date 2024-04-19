@@ -1,9 +1,15 @@
 # camera_protozero
 To run the code just to python3 cam.py
-
 Keyboard commands:
 q - quit
 p - take a picture
+
+Now there is the web application version:
+To run: 
+python3 cam_online.py
+
+At both cases, it saves the pictures at the folder photo at same directory of the main script
+
 
 ----------------------------------
 The camera is found automatically searching at the folder /sys/class/video4linux
