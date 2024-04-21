@@ -13,9 +13,12 @@ camera_name= "Trust Webcam: Trust Webcam"
 def get_data():
     now=datetime.now()
     dt_string = now.strftime("%d%m%Y%H%M%S")
-    print(dt_string)
     return dt_string
 
+def get_beauty_date():
+    now=datetime.now()
+    dt_string = now.strftime("%d/%m/%Y-%H:%M:%S")
+    return dt_string
 
 def find_camera_id(camera_name):
     devices_path = "/sys/class/video4linux"
@@ -38,13 +41,17 @@ def find_camera_id(camera_name):
             i=i+1
     return i
 
+def put_date(frame):
+    return cv2.putText(frame, get_beauty_date(),(10, 100),font, 1, (255,255,255))
 
 def gen_frames():  
     while True:
         success, frame = camera.read()  # read the camera frame
+        frame = put_date(frame)
         if not success:
             break
         else:
+
             ret, buffer = cv2.imencode('.jpg', frame)
             frame = buffer.tobytes()
             yield (b'--frame\r\n'
@@ -63,17 +70,18 @@ def take_picture():
     
     print("Taking picture...")
     ret, frame = camera.read()
-    cv2.imwrite("photo/" + get_data()+".jpg", frame)
+    cv2.imwrite("photo/" + get_data()+".jpg", put_date(frame))
 
     return "Picture taken!"  
 
 cam_id=find_camera_id(camera_name)
-camera = cv2.VideoCapture(0)
+camera = cv2.VideoCapture(-1,cv2.CAP_V4L)
+font = cv2.FONT_HERSHEY_SIMPLEX
 
 def main():
     camera.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
     camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
-    app.run(debug=True)
+    app.run(debug=False)
 
 if __name__ == "__main__":
     main()
