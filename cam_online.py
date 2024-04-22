@@ -1,5 +1,5 @@
 #Import necessary libraries
-from flask import Flask, render_template, Response
+from flask import Flask, render_template, Response, send_file, send_from_directory
 import cv2
 #library to communicate with the operational system
 import os
@@ -70,11 +70,13 @@ def take_picture():
     
     print("Taking picture...")
     ret, frame = camera.read()
-    cv2.imwrite("photo/" + get_data()+".jpg", put_date(frame))
+    name=get_data()+".jpg"
+    cv2.imwrite("photo/" + name , put_date(frame))
 
-    return "Picture taken!"  
+    return send_from_directory("photo/" + name, as_attachment=True) 
 
 cam_id=find_camera_id(camera_name)
+#camera = cv2.VideoCapture(camera_name,cv2.CAP_V4L)
 camera = cv2.VideoCapture(-1,cv2.CAP_V4L)
 font = cv2.FONT_HERSHEY_SIMPLEX
 

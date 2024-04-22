@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live Streaming</title>
+    <title>PROTO-0! The coolest experiment</title>
     <style>
         /* Define a CSS class for increasing font size */
         .large-font {
@@ -24,19 +24,55 @@
                 <!-- Apply the CSS class to your heading -->
                 <h3 class="mt-5 large-font">PROTO-0 </h3>
                 <img id="video_feed" src="{{ url_for('video_feed') }}" width="50%">
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-8 offset-lg-2">
                 <!-- Add a button to take a picture -->
                 <button id="take_picture" class="large-button">PHOTO!!!</button>
+                 <!-- Checkbox for download -->
+                <input type="checkbox" id="download_checkbox" checked>
+                <label for="download_checkbox">Download also in your machine?</label><br>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-8 offset-lg-2">
+                <!-- Add a button to take a picture -->
+                <button id="take_video" class="large-button">VIDEO(TO BE MADE)!!!</button>
+                 <!-- Checkbox for download -->
+                <input type="checkbox" id="download_checkbox_video" checked>
+                <label for="download_checkbox_video">Download also in your machine?</label><br>
             </div>
         </div>
     </div>
     <script>
-        // Add event listener to the button
-        document.getElementById("take_picture").addEventListener("click", function() {
-            // Send an AJAX request to the Flask server to take a picture
-            var xhr = new XMLHttpRequest();
-            xhr.open("GET", "/take_picture");
-            xhr.send();
+        // Add event listener to the button with ID take_picture
+        document.getElementById("take_picture").addEventListener("click", function() { //when the button is pressed
+            var download = document.getElementById("download_checkbox").checked;
+            // Send an AJAX request to the Flask server to download the image only if the checkbox is checked
+            var xhr = new XMLHttpRequest(); //create a HTTP solicitation
+            xhr.open("GET", "/take_picture"); //execute the flask function take_picture defined at .py
+            if (download) {
+                // Send an AJAX request to the Flask server to download the image
+                xhr.responseType = 'blob'; // define the answer as binary
+                xhr.onload = function() { //and then execute:
+                    if (xhr.status === 200) { //if was successeful
+                        // Create a temporary link element
+                        var a = document.createElement('a');
+                        var filename = xhr.getResponseHeader('Content-Disposition').split('filename=')[1].trim(); //get the name of the file
+                        var url = window.URL.createObjectURL(xhr.response);// create a tenporary link
+                        a.href = url; //define where to look to download
+                        a.download = filename; // what to download
+                        document.body.appendChild(a);
+                        a.click();  // Trigger the download
+                        window.URL.revokeObjectURL(url);  // Clean up - free space
+                    }
+                };
+            }
+            xhr.send(); //send the request HTTP and execute everything
         });
     </script>
+    
+    
 </body>
 </html>
