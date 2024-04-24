@@ -13,7 +13,7 @@ from datetime import datetime
 import threading
 #library for wait functions
 import time
-
+#library numpy
 import numpy as np
 
 
@@ -67,12 +67,16 @@ def find_camera_id(camera_name):
 def put_date(frame):
     return cv2.putText(frame, get_beauty_date(),(10, 100),font, 1, (255,255,255))
 
+#create black image when camera is not connected
 def generate_black():
-    img = np.zeros((res_y, res_x, 3), dtype = np.uint8)
-    img=cv2.putText(img, "NO DATA",(50, 50),font, 1, (255,255,255))
-    return img
+    #global img_black
+    img_black = np.zeros((res_y, res_x, 3), dtype = np.uint8)
 
-img_black = generate_black()
+    img_=cv2.putText(img_black, "NO DATA",(50, 50),font, 1, (255,255,255))
+    time.sleep(0.1)
+    return img_
+
+
 
 success: bool
 frame = None
@@ -85,9 +89,9 @@ def gen_frames():
         if camera.isOpened():
             success, frame = camera.read()  # read the camera frame
             if not success:
-                frame=img_black
+                frame=generate_black()
         else:
-            frame=img_black
+            frame=generate_black()
             success=False
         frame_date = put_date(frame)   
         ret, buffer = cv2.imencode('.jpg', frame_date)
