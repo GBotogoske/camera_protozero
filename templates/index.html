@@ -27,6 +27,7 @@
                 <!-- Apply the CSS class to your heading -->
                 <h3 class="mt-5 large-font">PROTO-0 </h3>
                 <img id="video_feed" src="{{ url_for('video_feed') }}" width="50%">
+                <button id="reset_camera" class="large-button"> RESET!!!</button>
             </div>
         </div>
         <div class="row">
@@ -35,16 +36,16 @@
                 <button id="take_picture" class="large-button">PHOTO!!!</button>
                  <!-- Checkbox for download -->
                 <input type="checkbox" id="download_checkbox" checked>
-                <label for="download_checkbox">Download also in your machine?</label><br>
+                <label for="download_checkbox">Download?</label><br>
             </div>
         </div>
         <div class="row">
             <div class="col-lg-8 offset-lg-2">
                 <!-- Add a button to take a picture -->
-                <button id="take_video" class="large-button">VIDEO(TO BE MADE)!!!</button>
+                <button id="take_video" class="large-button">VIDEO!!!</button>
                  <!-- Checkbox for download -->
                 <input type="checkbox" id="download_checkbox_video" checked>
-                <label for="download_checkbox_video">Download also in your machine?</label><br>
+                <label for="download_checkbox_video">Download?</label><br>
             </div>
         </div>
     </div>
@@ -78,9 +79,30 @@
         document.getElementById("take_video").addEventListener("click", function() {
             var button = document.getElementById("take_video");
             if (button.classList.contains("red")) {
+                var download = document.getElementById("download_checkbox_video").checked;
                 button.classList.remove("red");
                 var xhr = new XMLHttpRequest(); //create a HTTP solicitation
-                xhr.open("GET", "/stop_video"); 
+                xhr.open("GET", "/stop_video");
+                if (download) 
+                {
+                // Send an AJAX request to the Flask server to download the image
+                xhr.responseType = 'blob'; // define the answer as binary
+                xhr.onload = function() 
+                    { //and then execute:
+                    if (xhr.status === 200) 
+                        { //if was successeful
+                            // Create a temporary link element
+                            var a = document.createElement('a');
+                            var filename = xhr.getResponseHeader('Content-Disposition').split('filename=')[1].trim(); //get the name of the file
+                            var url = window.URL.createObjectURL(xhr.response);// create a tenporary link
+                            a.href = url; //define where to look to download
+                            a.download = filename; // what to download
+                            document.body.appendChild(a);
+                            a.click();  // Trigger the download
+                            window.URL.revokeObjectURL(url);  // Clean up - free space
+                        }
+                    };
+                } 
                 xhr.send();
             } else {
                 button.classList.add("red");
@@ -89,6 +111,12 @@
                 xhr.send();
             }
             });
+
+            document.getElementById("reset_camera").addEventListener("click", function() { //when the button is pressed
+                var xhr = new XMLHttpRequest(); //create a HTTP solicitation
+                xhr.open("GET", "/reset_camera"); //execute the flask function reset_camera defined at .py
+                xhr.send(); //send the request HTTP and execute everything
+             });
     </script>
     
     
