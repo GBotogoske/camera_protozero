@@ -16,39 +16,62 @@
             padding: 20px 40px; /* Adjust padding as needed */
         }
         .large-button.red {
-        background-color: red;
+            background-color: red;
+        }
+        .active {
+            display: block;
+        }
+
+        .hidden {
+            display: none;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="row">
-            <div class="col-lg-8 offset-lg-2">
-                <!-- Apply the CSS class to your heading -->
-                <h3 class="mt-5 large-font">PROTO-0 </h3>
-                <img id="video_feed" src="{{ url_for('video_feed') }}" width="50%">
-                <button id="reset_camera" class="large-button"> RESET!!!</button>
+        <div id="Page1" class="container">
+            <div class="row">
+                <div class="col-lg-8 offset-lg-2">
+                    <!-- Apply the CSS class to your heading -->
+                    <h3 class="mt-5 large-font">PROTO-0 </h3>
+                    <img id="video_feed" src="{{ url_for('video_feed') }}" width="50%">
+                    <button id="reset_camera" class="large-button"> RESET!!!</button>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-8 offset-lg-2">
+                    <!-- Add a button to take a picture -->
+                    <button id="take_picture" class="large-button">PHOTO!!!</button>
+                    <!-- Checkbox for download -->
+                    <input type="checkbox" id="download_checkbox" checked>
+                    <label for="download_checkbox">Download?</label><br>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-8 offset-lg-2">
+                    <!-- Add a button to take a picture -->
+                    <button id="take_video" class="large-button">VIDEO!!!</button>
+                    <!-- Checkbox for download -->
+                    <input type="checkbox" id="download_checkbox_video" checked>
+                    <label for="download_checkbox_video">Download?</label><br>
+                </div>
             </div>
         </div>
-        <div class="row">
-            <div class="col-lg-8 offset-lg-2">
-                <!-- Add a button to take a picture -->
-                <button id="take_picture" class="large-button">PHOTO!!!</button>
-                 <!-- Checkbox for download -->
-                <input type="checkbox" id="download_checkbox" checked>
-                <label for="download_checkbox">Download?</label><br>
+        
+        <div class="col-lg-8 offset-lg-2">
+            <div id="page_camera">
+                <h1>Options</h1>
+                <button onclick="show_camera_page()">Camera</button>
+            </div>
+        
+            <div id="page_gallery">
+                <button onclick="show_gallery_page()">Gallery</button>
+            </div>
+
+            <div id="page_options">
+                <button onclick="show_gallery_page()">Configurations</button>
             </div>
         </div>
-        <div class="row">
-            <div class="col-lg-8 offset-lg-2">
-                <!-- Add a button to take a picture -->
-                <button id="take_video" class="large-button">VIDEO!!!</button>
-                 <!-- Checkbox for download -->
-                <input type="checkbox" id="download_checkbox_video" checked>
-                <label for="download_checkbox_video">Download?</label><br>
-            </div>
-        </div>
-    </div>
+
     <script>
         // Add event listener to the button with ID take_picture
         document.getElementById("take_picture").addEventListener("click", function() { //when the button is pressed
@@ -85,23 +108,23 @@
                 xhr.open("GET", "/stop_video");
                 if (download) 
                 {
-                // Send an AJAX request to the Flask server to download the image
-                xhr.responseType = 'blob'; // define the answer as binary
-                xhr.onload = function() 
-                    { //and then execute:
-                    if (xhr.status === 200) 
-                        { //if was successeful
-                            // Create a temporary link element
-                            var a = document.createElement('a');
-                            var filename = xhr.getResponseHeader('Content-Disposition').split('filename=')[1].trim(); //get the name of the file
-                            var url = window.URL.createObjectURL(xhr.response);// create a tenporary link
-                            a.href = url; //define where to look to download
-                            a.download = filename; // what to download
-                            document.body.appendChild(a);
-                            a.click();  // Trigger the download
-                            window.URL.revokeObjectURL(url);  // Clean up - free space
-                        }
-                    };
+                    // Send an AJAX request to the Flask server to download the image
+                    xhr.responseType = 'blob'; // define the answer as binary
+                    xhr.onload = function() 
+                        { //and then execute:
+                        if (xhr.status === 200) 
+                            { //if was successeful
+                                // Create a temporary link element
+                                var a = document.createElement('a');
+                                var filename = xhr.getResponseHeader('Content-Disposition').split('filename=')[1].trim(); //get the name of the file
+                                var url = window.URL.createObjectURL(xhr.response);// create a tenporary link
+                                a.href = url; //define where to look to download
+                                a.download = filename; // what to download
+                                document.body.appendChild(a);
+                                a.click();  // Trigger the download
+                                window.URL.revokeObjectURL(url);  // Clean up - free space
+                            }
+                        };
                 } 
                 xhr.send();
             } else {
@@ -117,8 +140,17 @@
                 xhr.open("GET", "/reset_camera"); //execute the flask function reset_camera defined at .py
                 xhr.send(); //send the request HTTP and execute everything
              });
+             
+             function show_gallery_page() {
+                var row_camera = document.getElementById('Page1');
+                row_camera.classList.add('hidden');
+            }
+
+            function show_camera_page() {
+                var row_camera = document.getElementById('Page1');
+                row_camera.classList.remove('hidden');
+            }
+
     </script>
-    
-    
 </body>
 </html>
