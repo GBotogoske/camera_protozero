@@ -63,6 +63,7 @@
                     <label for="download_checkbox">Timer photos</label><br>
                     <input type="text" id="text_time_photo_total" placeholder="Total time (Default time:10s)">
                     <input type="text" id="text_time_photo_interval" placeholder="Interval between photos: (Default time:1s)">
+                    <textarea id="output_photo" rows="1" cols="100" readonly></textarea>
                 </div>
             </div>
             <div class="row">
@@ -75,6 +76,7 @@
                     <input type="checkbox" id="time_video" unchecked>
                     <label for="time_video">Time video? Value in seconds</label><br>
                     <input type="text" id="text_time_video" placeholder="Default time:10s">
+                    <textarea id="output_video" rows="1" cols="100" readonly></textarea>
                 </div>
             </div>
         </div>
@@ -257,6 +259,31 @@
                 var container = document.getElementById('photo-container');
                 container.innerHTML = '<img src="/photos/' + filename + '" style="max-width: 100%; max-height: 100%;">';
             }
+
+            function handleEvent_photo(event) 
+            {
+                var outputBox = document.getElementById("output_photo");
+                // Append message to output text box
+                outputBox.value="";
+                outputBox.value = event.data + "\n";
+            }
+
+            // Create EventSource to listen for messages from Flask backend
+            var eventSource = new EventSource("/photo_status");
+            eventSource.onmessage = handleEvent_photo;
+
+            function handleEvent_video(event) 
+            {
+                var outputBox = document.getElementById("output_video");
+                // Append message to output text box
+                outputBox.value="";
+                outputBox.value = event.data + "\n";
+            }
+
+            // Create EventSource to listen for messages from Flask backend
+            var eventSource_video = new EventSource("/video_status");
+            eventSource_video.onmessage = handleEvent_video;
+
     </script>
 </body>
 </html>

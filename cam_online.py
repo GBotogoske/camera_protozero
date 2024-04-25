@@ -121,12 +121,14 @@ def take_picture():
 
     return send_from_directory("photo/" , name, as_attachment=True)
 
+now_time =0
 #thread that handles the temporized photos
 def photo_thread(mutex_photo):
+    global now_time
     now_time = 0
     global is_taking_photo
     with mutex_photo:
-        while now_time <= timer_total:
+        while now_time <= timer_total and is_taking_photo:
             print("Taking temporized pictures...")
             #ret, frame = camera.read()
             name=get_data()+".jpg"
@@ -171,9 +173,42 @@ def tp_function():
         print("timer total")
         print(timer_total)
         photo_thread_var = threading.Thread(target=photo_thread, args=(mutex_photo,))
-        photo_thread_var.start() #create a thread to record the photo    
+        photo_thread_var.start() #create a thread to record the photo 
+    else:
+        is_taking_photo=False   
     return "True"
 
+#function that handles the status of picture timer
+@app.route('/photo_status')
+def photo_status():
+    def generate():
+        global is_taking_photo
+        global timer_total
+        global timer_interval
+        # Send messages periodically
+        while True:
+           # print("Temp\n" + str(500))
+            yield "data: {}\n\n".format("Temporized photos: ON -- Total time: {}s -- Interval: {}s".format(timer_total, timer_interval) if is_taking_photo else "Temporized Photos OFF")
+            time.sleep(1)  # Send status every 1 second
+            #time.sleep(1)  # Simulate delay
+    return Response(generate(), mimetype='text/event-stream')
+
+#function that handles the status of video
+@app.route('/video_status')
+def video_status():
+    def generate_video():
+        global is_recording
+        global default_video_time
+        global fps
+        global n_frames
+        # Send messages periodically
+        while True:
+            time_recording=n_frames/fps
+           # print("Temp\n" + str(500))
+            yield "data: {}\n\n".format("VIDEO RECORDING ON -- Total time: {}s -- Now time: {}s".format(default_video_time, time_recording) if is_recording else "VIDEO RECORDING OFF")
+            time.sleep(1)  # Send status every 1 second
+            #time.sleep(1)  # Simulate delay
+    return Response(generate_video(), mimetype='text/event-stream')
 
 
 is_recording=False
@@ -195,14 +230,17 @@ def recording(mutex):
             #if camera.isOpened():
                 #ret, frame = camera.read()
                 #if success==True:
+            n_frames=n_frames+1
             time.sleep(1.0/fps)                
             video_file.write(frame_date)
             
         video_file.release()
         print("Ending video")
 
+n_frames=0
 #thread for recording temporized videos
 def recording_time(mutex):
+    global n_frames
     n_frames=0
     global video_file_name
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
