@@ -1,7 +1,7 @@
 #Import necessary libraries
 
 #library for  web interface applications
-from flask import Flask, render_template, Response, send_file, send_from_directory
+from flask import Flask, render_template, Response, request, send_from_directory, jsonify
 #library for camera applications
 import cv2
 import typing as _typing
@@ -17,7 +17,6 @@ import time
 import numpy as np
 
 
-
 #Initialize the Flask app
 app = Flask(__name__)
 #camera name, check the name of your camera at /sys/class/video4linux/video(i)/name (OBRIGADO) 
@@ -25,9 +24,11 @@ camera_name= "Trust Webcam: Trust Webcam"
 res_x=1280
 res_y=720
 font = cv2.FONT_HERSHEY_SIMPLEX #font to the date text
-
+PHOTO_DIR = "./photo"
+VIDEO_DIR = "./video"
 #to the video recording
 mutex = threading.Lock()
+mutex_photo = threading.Lock()
 
 #return the date in the format DDMMYYYYHHMMSS
 def get_data():
@@ -77,7 +78,6 @@ def generate_black():
     return img_
 
 
-
 success: bool
 frame = None
 frame_date = None
@@ -121,11 +121,63 @@ def take_picture():
 
     return send_from_directory("photo/" , name, as_attachment=True)
 
+#thread that handles the temporized photos
+def photo_thread(mutex_photo):
+    now_time = 0
+    global is_taking_photo
+    with mutex_photo:
+        while now_time <= timer_total:
+            print("Taking temporized pictures...")
+            #ret, frame = camera.read()
+            name=get_data()+".jpg"
+            cv2.imwrite("photo/" + name , frame_date)
+            now_time=now_time+timer_interval
+            print(now_time)
+            time.sleep(timer_interval)
+    is_taking_photo=False
+    print("stoping pictures")
+
+#function for the temporized photos    
+timer_total=10
+timer_interval=1
+photo_thread_var=None
+is_taking_photo = False
+@app.route('/tp_function',methods=['POST'])
+def tp_function():
+    global timer_total
+    global timer_interval
+    global photo_thread_var
+    global is_taking_photo
+    data = request.json
+    text_total = data.get('text')
+    text_interval = data.get('text_i')
+    print(text_interval)
+    print(text_total)
+    try:
+        timer_total = float(text_total)  # Convert the string to a floating-point number
+    except ValueError:
+        timer_total = 10 # Return 10 if the string is not a valid number
+
+    try:
+        timer_interval = float(text_interval)  # Convert the string to a floating-point number
+    except ValueError:
+        timer_interval = 1 # Return 10 if the string is not a valid number
+    
+    if not is_taking_photo:
+        is_taking_photo=True
+        # Process the text here (you can modify parameters or perform any other action)
+        print("timer interval")
+        print(timer_interval)
+        print("timer total")
+        print(timer_total)
+        photo_thread_var = threading.Thread(target=photo_thread, args=(mutex_photo,))
+        photo_thread_var.start() #create a thread to record the photo    
+    return "True"
+
+
 
 is_recording=False
 fps=24.0
-n_frames=0
-
 #theread for recording the video
 video_file_name = None
 def recording(mutex):
@@ -149,12 +201,54 @@ def recording(mutex):
         video_file.release()
         print("Ending video")
 
+#thread for recording temporized videos
+def recording_time(mutex):
+    n_frames=0
+    global video_file_name
+    fourcc = cv2.VideoWriter_fourcc(*'XVID')
+    video_file = cv2.VideoWriter()
+    with mutex:
+        video_file_name=get_data()+".avi"
+        video_file = cv2.VideoWriter("video/"+video_file_name, fourcc, fps, (res_x,res_y))
+        global is_recording 
+        is_recording= True
+        print("Starting video...")
+        while is_recording == True:
+            #if camera.isOpened():
+                #ret, frame = camera.read()
+                #if success==True:
+            time.sleep(1.0/fps)                
+            video_file.write(frame_date)
+            n_frames=n_frames+1
+            if(n_frames/fps>=default_video_time):
+                is_recording=False
+        video_file.release()
+        print("Ending video")
+
 #function that start the video recording
 recording_thread = None
 @app.route('/start_video')
 def start_video():
     global recording_thread
     recording_thread = threading.Thread(target=recording, args=(mutex,))
+    recording_thread.start() #create a thread to record the video       
+    return "True"
+
+#function that start the temporized video recording
+default_video_time=10
+@app.route('/timer_video', methods=['POST'])
+def timer_video():
+    global default_video_time
+    global recording_thread
+    data = request.json
+    text = data['text']
+    try:
+        default_video_time = float(text)  # Convert the string to a floating-point number
+    except ValueError:
+        default_video_time = 10 # Return 10 if the string is not a valid number
+    # Process the text here (you can modify parameters or perform any other action)
+    print(default_video_time)
+    recording_thread = threading.Thread(target=recording_time, args=(mutex,))
     recording_thread.start() #create a thread to record the video       
     return "True"
 
@@ -167,7 +261,7 @@ def stop_video():
     print("sending video: " + video_file_name)
     return send_from_directory("video/" , video_file_name , as_attachment=True)
 
-
+#function that resets the camera 
 @app.route('/reset_camera')
 def reset_camera():
     print("reseting camera")
@@ -187,9 +281,9 @@ def reset_camera():
         camera.set(cv2.CAP_PROP_FRAME_HEIGHT, res_y)
     return "True"
 
+
+
 cam_id=find_camera_id(camera_name) #find the id of camera based on his name on the linux interface
-
-
 def main(): #this is the main thread
     global success
     global camera
@@ -209,6 +303,26 @@ def main(): #this is the main thread
     except:
         print("video dir already exists")
     app.run(debug=False)
+
+@app.route('/photos/<filename>')
+def get_photo(filename):
+    # Serve the requested photo file
+    return send_from_directory(PHOTO_DIR, filename)
+
+# Function to extract date from filename
+def extract_date(filename):
+    date_str = filename[:-4]  # Remove the extension
+    return datetime.strptime(date_str, "%d%m%Y%H%M%S")
+
+# Sort the list of file names based on date
+
+
+@app.route('/get_photos_list')
+def get_photos_list():
+    # Get the list of photo files in the directory
+    photo_files = os.listdir(PHOTO_DIR)
+    photo_files = sorted(photo_files, key=extract_date, reverse=True)
+    return jsonify(photo_files)
 
 
 if __name__ == "__main__":
