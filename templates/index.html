@@ -25,6 +25,21 @@
         .hidden {
             display: none;
         }
+        
+        #photo-list {
+            overflow-y: auto; /* Add a vertical scrollbar when needed */
+            max-height: 400px; /* Set a maximum height for the container */
+            border: 2px solid black;
+            padding: 10px;
+            width: fit-content;
+        }
+
+        #photo-container {
+            float: right;
+            width: 50%;
+            height: auto;
+        }
+    
     </style>
 </head>
 <body>
@@ -44,6 +59,10 @@
                     <!-- Checkbox for download -->
                     <input type="checkbox" id="download_checkbox" checked>
                     <label for="download_checkbox">Download?</label><br>
+                    <input type="checkbox" id="timer_photo" unchecked>
+                    <label for="download_checkbox">Timer photos</label><br>
+                    <input type="text" id="text_time_photo_total" placeholder="Total time (Default time:10s)">
+                    <input type="text" id="text_time_photo_interval" placeholder="Interval between photos: (Default time:1s)">
                 </div>
             </div>
             <div class="row">
@@ -53,54 +72,94 @@
                     <!-- Checkbox for download -->
                     <input type="checkbox" id="download_checkbox_video" checked>
                     <label for="download_checkbox_video">Download?</label><br>
+                    <input type="checkbox" id="time_video" unchecked>
+                    <label for="time_video">Time video? Value in seconds</label><br>
+                    <input type="text" id="text_time_video" placeholder="Default time:10s">
                 </div>
             </div>
         </div>
-        
-        <div class="col-lg-8 offset-lg-2">
+
+        <div class="row">
             <div id="page_camera">
                 <h1>Options</h1>
                 <button onclick="show_camera_page()">Camera</button>
             </div>
-        
+    
             <div id="page_gallery">
                 <button onclick="show_gallery_page()">Gallery</button>
             </div>
-
+    
             <div id="page_options">
-                <button onclick="show_gallery_page()">Configurations</button>
+                <button onclick="show_options_page()">Configurations</button>
             </div>
         </div>
+
+        <div id="Page2" class="container hidden">
+            <h1>Gallery</h1>
+            <div id="photo-container">
+            <!-- Container for displaying selected photo -->
+            </div>
+            <div id="photo-list">
+                <ul>
+                    {% for photo_file in photo_files %}
+                    <li><a href="#" onclick="showPhoto('{{ photo_file }}')">{{ photo_file }}</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </body>
+        
+        <div id="Page3" class="container hidden">
+            <h1>Configuration</h1>
+            <input type="text" id="Path_Text" placeholder="Default folder: ./">
+            <button onclick="sendFolder()">Send</button>
+        </div> 
 
     <script>
         // Add event listener to the button with ID take_picture
         document.getElementById("take_picture").addEventListener("click", function() { //when the button is pressed
             var download = document.getElementById("download_checkbox").checked;
+            var check_time = document.getElementById("timer_photo").checked;
             // Send an AJAX request to the Flask server to download the image only if the checkbox is checked
             var xhr = new XMLHttpRequest(); //create a HTTP solicitation
-            xhr.open("GET", "/take_picture"); //execute the flask function take_picture defined at .py
-            if (download) {
-                // Send an AJAX request to the Flask server to download the image
-                xhr.responseType = 'blob'; // define the answer as binary
-                xhr.onload = function() { //and then execute:
-                    if (xhr.status === 200) { //if was successeful
-                        // Create a temporary link element
-                        var a = document.createElement('a');
-                        var filename = xhr.getResponseHeader('Content-Disposition').split('filename=')[1].trim(); //get the name of the file
-                        var url = window.URL.createObjectURL(xhr.response);// create a tenporary link
-                        a.href = url; //define where to look to download
-                        a.download = filename; // what to download
-                        document.body.appendChild(a);
-                        a.click();  // Trigger the download
-                        window.URL.revokeObjectURL(url);  // Clean up - free space
-                    }
+            if (check_time)
+            {
+                var text = document.getElementById("text_time_photo_total").value;
+                var text_i = document.getElementById("text_time_photo_interval").value;
+                xhr.open("POST", "/tp_function",true);
+                xhr.setRequestHeader("Content-Type", "application/json");
+                var data = {
+                    "text_total": text,
+                    "text_interval": text_i
                 };
+                xhr.send(JSON.stringify({text:text,text_i:text_i}));
+            }
+            else
+            {
+                xhr.open("GET", "/take_picture"); //execute the flask function take_picture defined at .py
+                if (download) {
+                    // Send an AJAX request to the Flask server to download the image
+                    xhr.responseType = 'blob'; // define the answer as binary
+                    xhr.onload = function() { //and then execute:
+                        if (xhr.status === 200) { //if was successeful
+                            // Create a temporary link element
+                            var a = document.createElement('a');
+                            var filename = xhr.getResponseHeader('Content-Disposition').split('filename=')[1].trim(); //get the name of the file
+                            var url = window.URL.createObjectURL(xhr.response);// create a tenporary link
+                            a.href = url; //define where to look to download
+                            a.download = filename; // what to download
+                            document.body.appendChild(a);
+                            a.click();  // Trigger the download
+                            window.URL.revokeObjectURL(url);  // Clean up - free space
+                        }
+                    };
+                }
             }
             xhr.send(); //send the request HTTP and execute everything
         });
 
         document.getElementById("take_video").addEventListener("click", function() {
             var button = document.getElementById("take_video");
+            var check_time = document.getElementById("time_video").checked;
             if (button.classList.contains("red")) {
                 var download = document.getElementById("download_checkbox_video").checked;
                 button.classList.remove("red");
@@ -130,7 +189,17 @@
             } else {
                 button.classList.add("red");
                 var xhr = new XMLHttpRequest(); //create a HTTP solicitation
-                xhr.open("GET", "/start_video"); 
+                var text = document.getElementById("text_time_video").value;
+                if(check_time)
+                {
+                    xhr.open("POST", "/timer_video", true);
+                    xhr.setRequestHeader("Content-Type", "application/json");
+                    xhr.send(JSON.stringify({ text: text }));
+                }
+                else
+                {
+                    xhr.open("GET", "/start_video"); 
+                }
                 xhr.send();
             }
             });
@@ -144,13 +213,50 @@
              function show_gallery_page() {
                 var row_camera = document.getElementById('Page1');
                 row_camera.classList.add('hidden');
+                var row_gallery = document.getElementById('Page2');
+                row_gallery.classList.remove('hidden');
+                var row_options = document.getElementById('Page3');
+                row_options.classList.add('hidden');
+               // Call the Flask route to get the list of photos
+                var xhr = new XMLHttpRequest();
+                xhr.open("GET", "/get_photos_list");
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState == 4 && xhr.status == 200) {
+                        var photo_files = JSON.parse(xhr.responseText);
+                        var photoListHTML = "";
+                        photo_files.forEach(function(photo_file) {
+                            photoListHTML += '<li><a href="#" onclick="showPhoto(\'' + photo_file + '\')">' + photo_file + '</a></li>';
+                        });
+                        document.getElementById("photo-list").innerHTML = photoListHTML;
+                    }
+                };
+                xhr.send();
             }
 
             function show_camera_page() {
                 var row_camera = document.getElementById('Page1');
                 row_camera.classList.remove('hidden');
+                var row_gallery = document.getElementById('Page2');
+                row_gallery.classList.add('hidden');
+                var row_options = document.getElementById('Page3');
+                row_options.classList.add('hidden');
+
             }
 
+            function show_options_page() {
+                var row_camera = document.getElementById('Page1');
+                row_camera.classList.add('hidden');
+                var row_gallery = document.getElementById('Page2');
+                row_gallery.classList.add('hidden');
+                var row_options = document.getElementById('Page3');
+                row_options.classList.remove('hidden');
+            }
+
+            function showPhoto(filename) 
+            {
+                var container = document.getElementById('photo-container');
+                container.innerHTML = '<img src="/photos/' + filename + '" style="max-width: 100%; max-height: 100%;">';
+            }
     </script>
 </body>
 </html>
