@@ -8,7 +8,8 @@ Now there is the web application version:
 To run: 
 python3 cam_online.py
 
-At both cases, it saves the pictures at the folder photo at same directory of the main script
+It saves the photos and videos in the photo or video folder: HOME_DIR/photo or HOME_DIR/video
+HOME_DIR ny default is the dir where you run the script, but it can be changed on the go at the configurations TAB
 
 
 ----------------------------------
