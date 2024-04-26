@@ -24,8 +24,9 @@ camera_name= "Trust Webcam: Trust Webcam"
 res_x=1280
 res_y=720
 font = cv2.FONT_HERSHEY_SIMPLEX #font to the date text
-PHOTO_DIR = "./photo"
-VIDEO_DIR = "./video"
+PHOTO_DIR = "/photo"
+VIDEO_DIR = "/video"
+HOME_DIR = "."
 #to the video recording
 mutex = threading.Lock()
 mutex_photo = threading.Lock()
@@ -105,7 +106,7 @@ def gen_frames():
 def index():
     return render_template('index.html')
 
-#function thart return the real time video to the web interface
+#function that return the real time video to the web interface
 @app.route('/video_feed')
 def video_feed():
     return Response(gen_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
@@ -117,9 +118,9 @@ def take_picture():
     print("Taking picture...")
     #ret, frame = camera.read()
     name=get_data()+".jpg"
-    cv2.imwrite("photo/" + name , frame_date)
+    cv2.imwrite(HOME_DIR+PHOTO_DIR+"/" + name , frame_date)
 
-    return send_from_directory("photo/" , name, as_attachment=True)
+    return send_from_directory(HOME_DIR+PHOTO_DIR+"/" , name, as_attachment=True)
 
 now_time =0
 #thread that handles the temporized photos
@@ -132,7 +133,7 @@ def photo_thread(mutex_photo):
             print("Taking temporized pictures...")
             #ret, frame = camera.read()
             name=get_data()+".jpg"
-            cv2.imwrite("photo/" + name , frame_date)
+            cv2.imwrite(HOME_DIR+PHOTO_DIR+"/" + name , frame_date)
             now_time=now_time+timer_interval
             print(now_time)
             time.sleep(timer_interval)
@@ -178,6 +179,19 @@ def tp_function():
         is_taking_photo=False   
     return "True"
 
+
+#function that handles the status of actual homefolder
+@app.route('/homefolder_status')
+def homefolder_status():
+    def generate():
+        # Send messages periodically
+        while True:
+           # print("Temp\n" + str(500))
+            yield "data: {}\n\n".format("Folder: " + HOME_DIR)
+            time.sleep(5)  # Send status every 1 second
+            #time.sleep(1)  # Simulate delay
+    return Response(generate(), mimetype='text/event-stream')
+
 #function that handles the status of picture timer
 @app.route('/photo_status')
 def photo_status():
@@ -222,7 +236,7 @@ def recording(mutex):
     video_file = cv2.VideoWriter()
     with mutex:
         video_file_name=get_data()+".avi"
-        video_file = cv2.VideoWriter("video/"+video_file_name, fourcc, fps, (res_x,res_y))
+        video_file = cv2.VideoWriter(HOME_DIR+VIDEO_DIR+"/"+video_file_name, fourcc, fps, (res_x,res_y))
         global is_recording 
         is_recording= True
         print("Starting video...")
@@ -242,24 +256,29 @@ n_frames=0
 def recording_time(mutex):
     global n_frames
     n_frames=0
+    max_time=60 #seconds
+    n_frames_max=0
     global video_file_name
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
     video_file = cv2.VideoWriter()
     with mutex:
         video_file_name=get_data()+".avi"
-        video_file = cv2.VideoWriter("video/"+video_file_name, fourcc, fps, (res_x,res_y))
+        video_file = cv2.VideoWriter(HOME_DIR+VIDEO_DIR+"/"+video_file_name, fourcc, fps, (res_x,res_y))
         global is_recording 
         is_recording= True
         print("Starting video...")
         while is_recording == True:
-            #if camera.isOpened():
-                #ret, frame = camera.read()
-                #if success==True:
             time.sleep(1.0/fps)                
             video_file.write(frame_date)
             n_frames=n_frames+1
+            n_frames_max=n_frames_max+1
             if(n_frames/fps>=default_video_time):
                 is_recording=False
+            if(n_frames_max/fps>=max_time):
+                video_file.release()
+                n_frames_max=0
+                video_file_name=get_data()+".avi"
+                video_file = cv2.VideoWriter(HOME_DIR+VIDEO_DIR+"/"+video_file_name, fourcc, fps, (res_x,res_y))
         video_file.release()
         print("Ending video")
 
@@ -297,7 +316,21 @@ def stop_video():
     is_recording=False
     recording_thread.join()
     print("sending video: " + video_file_name)
-    return send_from_directory("video/" , video_file_name , as_attachment=True)
+    return send_from_directory(HOME_DIR+VIDEO_DIR+"/" , video_file_name , as_attachment=True)
+
+#function that change the home_folder
+@app.route('/change_folder', methods=['POST'])
+def change_folder():
+    global HOME_DIR
+    data = request.json
+    text = data['text']
+    print(text)
+    if os.path.exists(text) and os.path.isdir(text):
+        HOME_DIR=text
+    else:
+        HOME_DIR="."
+    create_dirs()
+    return "True"
 
 #function that resets the camera 
 @app.route('/reset_camera')
@@ -320,6 +353,21 @@ def reset_camera():
     return "True"
 
 
+def change_dir():
+    global HOME_DIR
+    
+
+#create photo and video dirs
+def create_dirs():
+    try:
+        os.mkdir(HOME_DIR+PHOTO_DIR)
+    except:
+        print("photo dir already exists")
+    try:
+        os.mkdir(HOME_DIR+VIDEO_DIR)
+    except:
+        print("video dir already exists")
+    
 
 cam_id=find_camera_id(camera_name) #find the id of camera based on his name on the linux interface
 def main(): #this is the main thread
@@ -332,33 +380,28 @@ def main(): #this is the main thread
     else:
         camera.set(cv2.CAP_PROP_FRAME_WIDTH, res_x)
         camera.set(cv2.CAP_PROP_FRAME_HEIGHT, res_y)
-    try:
-        os.mkdir("photo")
-    except:
-        print("photo dir already exists")
-    try:
-        os.mkdir("video")
-    except:
-        print("video dir already exists")
+    create_dirs()
     app.run(debug=False)
 
 @app.route('/photos/<filename>')
 def get_photo(filename):
     # Serve the requested photo file
-    return send_from_directory(PHOTO_DIR, filename)
+    return send_from_directory(HOME_DIR+PHOTO_DIR+"/", filename)
 
 # Function to extract date from filename
 def extract_date(filename):
     date_str = filename[:-4]  # Remove the extension
     return datetime.strptime(date_str, "%d%m%Y%H%M%S")
 
-# Sort the list of file names based on date
-
-
+# Sort the list of file names based on the photo dir
 @app.route('/get_photos_list')
 def get_photos_list():
     # Get the list of photo files in the directory
-    photo_files = os.listdir(PHOTO_DIR)
+    photo_files_aux = os.listdir(HOME_DIR+PHOTO_DIR+"/")
+    photo_files=[]
+    for file in photo_files_aux:
+            if file.endswith(".jpg"):
+                photo_files.append(file)
     photo_files = sorted(photo_files, key=extract_date, reverse=True)
     return jsonify(photo_files)
 

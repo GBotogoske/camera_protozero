@@ -79,6 +79,7 @@
                     <textarea id="output_video" rows="1" cols="100" readonly></textarea>
                 </div>
             </div>
+           
         </div>
 
         <div class="row">
@@ -108,14 +109,19 @@
                     {% endfor %}
                 </ul>
             </div>
-        </body>
-        
+       
+            
         <div id="Page3" class="container hidden">
-            <h1>Configuration</h1>
-            <input type="text" id="Path_Text" placeholder="Default folder: ./">
-            <button onclick="sendFolder()">Send</button>
+            <div class="row">
+                <h1>Configuration</h1>
+                <input type="text" id="Path_Text" placeholder="Default folder: ./">
+                <button id="homefolder_button" class="large-button"> Change!!!</button>
+                <textarea id="home_folder_tab" rows="1" cols="100" readonly></textarea>
+            </div>
         </div> 
 
+        
+</body>
     <script>
         // Add event listener to the button with ID take_picture
         document.getElementById("take_picture").addEventListener("click", function() { //when the button is pressed
@@ -206,6 +212,15 @@
             }
             });
 
+            document.getElementById("homefolder_button").addEventListener("click", function() {
+                var text = document.getElementById("Path_Text").value;
+                var xhr = new XMLHttpRequest(); //create a HTTP solicitation
+                xhr.open("POST", "/change_folder", true);
+                xhr.setRequestHeader("Content-Type", "application/json");
+                xhr.send(JSON.stringify({ text: text }));
+                xhr.send();
+            });
+
             document.getElementById("reset_camera").addEventListener("click", function() { //when the button is pressed
                 var xhr = new XMLHttpRequest(); //create a HTTP solicitation
                 xhr.open("GET", "/reset_camera"); //execute the flask function reset_camera defined at .py
@@ -283,7 +298,19 @@
             // Create EventSource to listen for messages from Flask backend
             var eventSource_video = new EventSource("/video_status");
             eventSource_video.onmessage = handleEvent_video;
+            
+            function handleEvent_homefolder(event) 
+            {
+                var outputBox = document.getElementById("home_folder_tab");
+                // Append message to output text box
+                outputBox.value="";
+                outputBox.value = event.data + "\n";
+            }
 
+            // Create EventSource to listen for messages from Flask backend
+            var eventSource_homefolder = new EventSource("/homefolder_status");
+            eventSource_homefolder.onmessage = handleEvent_homefolder;
+            
     </script>
-</body>
+
 </html>
