@@ -20,7 +20,7 @@ import numpy as np
 #Initialize the Flask app
 app = Flask(__name__)
 #camera name, check the name of your camera at /sys/class/video4linux/video(i)/name (OBRIGADO) 
-camera_name= "Trust Webcam: Trust Webcam"
+camera_name= "HD USB Camera"
 res_x=1280
 res_y=720
 font = cv2.FONT_HERSHEY_SIMPLEX #font to the date text
