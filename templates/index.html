@@ -3,40 +3,446 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live Streaming</title>
+    <title>PROTO-0 - The Coolest Experiment</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        /* Define a CSS class for increasing font size */
-        .large-font {
-            font-size: 36px; /* Adjust font size as needed */
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f2f2f2;
+            color: #333;
         }
 
-        /* Define a CSS class for increasing button size */
-        .large-button {
-            font-size: 24px; /* Adjust font size as needed */
-            padding: 20px 40px; /* Adjust padding as needed */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
         }
+        
+
+        .container_2 {
+            display: flex;
+             align-items: center;
+        }
+
+        .container_2 h4 {
+            margin-right: 10px; /* Adjust margin between label and input as needed */
+        }
+
+        h1, h2, h3 {
+            color: #009688;
+        }
+       
+
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            font-size: 18px;
+            border: none;
+            border-radius: 5px;
+            background-color: #009688;
+            color: #fff;
+            text-align: center;
+            text-decoration: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .button:hover {
+            background-color: #00796b;
+        }
+
+        .blue-box {
+            background-color: #2196F3;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .blue-box h1 {
+        color: black; /* Change this color to your desired color */
+        }
+
+        .yellow-box {
+            background-color: rgb(255, 255, 7);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .check-box {
+            background-color: rgb(28, 255, 7);
+            padding: 0px;
+            border-radius: 30px;
+            margin-bottom: 5px;
+            margin-top: 5px;
+            text-align: center;
+            border: 2px solid black;
+            
+            align-items: center;
+        }
+       
+
+        
+        .lightblue-box {
+            background-color:greenyellow;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        input[type="text"], textarea {
+            width: 70%;
+            padding: 5px;
+            margin-bottom: 0px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        input[type="checkbox"] {
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+
+        label {
+            font-size: 16px;
+        }
+        .active{
+            display: block;
+        }
+        .hidden{
+            display: none;
+        }
+
+        #Page2 {
+        display: none; /* Initially hide the Page2 container */
+        flex-direction: row; /* Ensure flex items are in a row */
+        }
+
+        #photo-list {
+            overflow-y: auto; /* Add a vertical scrollbar when needed */
+            max-height: 400px; /* Set a maximum height for the container */
+            border: 2px solid black;
+            padding: 20px;
+            flex: 1; /* Occupy 1/3 of the space */
+        }
+
+        #photo-container {
+            margin: auto;
+            width: 100%;
+            height: auto;
+            flex: 2; /* Occupy 2/3 of the space */
+        }
+        textarea
+        {
+            resize: none;
+        }
+        textarea.no-scroll
+        {
+            overflow: hidden;
+            padding-top: 0px;
+            padding-bottom: 0px;
+            width: 75%;
+            display: inline-block;
+            white-space: nowrap;
+        }
+       
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="row">
-            <div class="col-lg-8 offset-lg-2">
-                <!-- Apply the CSS class to your heading -->
-                <h3 class="mt-5 large-font">PROTO-0 </h3>
-                <img id="video_feed" src="{{ url_for('video_feed') }}" width="50%">
-                <!-- Add a button to take a picture -->
-                <button id="take_picture" class="large-button">PHOTO!!!</button>
+
+    <div id="Page_principal" class="container">
+        <div class="blue-box">
+            <h1>PROTO-0</h1>
+        </div>
+
+        <h2>Options</h2>
+        <div>
+            <button class="button" onclick="show_camera_page()">Camera</button>
+            <button class="button" onclick="show_gallery_page()">Gallery</button>
+            <button class="button" onclick="show_options_page()">Configurations</button>
+        </div>
+        <div class="lightblue-box">
+            <textarea id="home_folder_tab_principal" class = "no-scroll" rows="1" readonly overflow=" hidden"></textarea>
+        </div>
+       
+
+    </div>
+
+    <div id="Page1" class="container">
+        <div class="yellow-box">
+            <img id="video_feed" src="{{ url_for('video_feed') }}" width="100%">
+            <button id="reset_camera" class="button">RESET</button>
+        </div>
+        <div class="container_2">
+            <button id="take_picture" class="button">PHOTO</button>
+            <input type="checkbox" id="download_checkbox" unchecked>
+            <label for="download_checkbox">Download to Browser</label><br>
+            <input type="checkbox" id="timer_photo">
+            <label for="timer_photo">Timer photos</label><br>
+         </div>
+        
+        <div class="check-box">
+            <div class="container_2">
+                <h4>Time duration of temporized photos (s):</h4>
+                    <input type="text" id="text_time_photo_total" placeholder="Total time (Default time:10s)">
             </div>
         </div>
+        
+        <div class="check-box">
+            <div class="container_2">
+                <h4>Time between each photo (s):</h4>
+                    <input type="text" id="text_time_photo_interval" placeholder="Interval between photos: (Default time:1s)">
+            </div>
+        </div>
+        
+        <textarea id="output_photo" rows="1" cols="100" readonly></textarea>
+
+        <div class="container_2">
+            <button id="take_video" class="button">VIDEO</button>
+            <input type="checkbox" id="download_checkbox_video" unchecked>
+            <label for="download_checkbox_video">Download to Browser</label><br>
+            <input type="checkbox" id="time_video">
+            <label for="time_video">Time video? </label><br>
+         </div>
+        
+         <div class="check-box">
+            <div class="container_2">
+                <h4>Time duration for recording the video (s):</h4>
+                    <input type="text" id="text_time_video" placeholder="Default time:10s">
+            </div>
+        </div>
+        
+        <div class="check-box">
+            <div class="container_2">
+                <h4>Time of each video file (s):</h4>
+                    <input type="text" id="text_time_video_file" placeholder="Default time:1s">
+            </div>
+        </div>
+        
+        <textarea id="output_video" rows="1" cols="100" readonly></textarea>
     </div>
-    <script>
-        // Add event listener to the button
-        document.getElementById("take_picture").addEventListener("click", function() {
-            // Send an AJAX request to the Flask server to take a picture
-            var xhr = new XMLHttpRequest();
-            xhr.open("GET", "/take_picture");
-            xhr.send();
-        });
-    </script>
+        
+
+        <div id="Page2" class="container hidden">
+            <h2 class="gallery-heading">Gallery</h2>
+            <div id="photo-list"></div>
+            <div id="photo-container"></div>
+        </div>
+        
+        
+    
+    <div id="Page3" class="container hidden">
+        <h2>Configuration</h2>
+        <input type="text" id="Path_Text" placeholder="Default folder: ./">
+        <button id="homefolder_button" class="button">Change</button>
+        <textarea id="home_folder_tab" rows="1" cols="100" readonly></textarea>
+    </div> 
 </body>
+
+    <script>
+        // Add event listener to the button with ID take_picture
+        document.getElementById("take_picture").addEventListener("click", function() { //when the button is pressed
+            var download = document.getElementById("download_checkbox").checked;
+            var check_time = document.getElementById("timer_photo").checked;
+            // Send an AJAX request to the Flask server to download the image only if the checkbox is checked
+            var xhr = new XMLHttpRequest(); //create a HTTP solicitation
+            if (check_time)
+            {
+                var text = document.getElementById("text_time_photo_total").value;
+                var text_i = document.getElementById("text_time_photo_interval").value;
+                xhr.open("POST", "/tp_function",true);
+                xhr.setRequestHeader("Content-Type", "application/json");
+                var data = {
+                    "text_total": text,
+                    "text_interval": text_i
+                };
+                xhr.send(JSON.stringify({text:text,text_i:text_i}));
+            }
+            else
+            {
+                xhr.open("GET", "/take_picture"); //execute the flask function take_picture defined at .py
+                if (download) {
+                    // Send an AJAX request to the Flask server to download the image
+                    xhr.responseType = 'blob'; // define the answer as binary
+                    xhr.onload = function() { //and then execute:
+                        if (xhr.status === 200) { //if was successeful
+                            // Create a temporary link element
+                            var a = document.createElement('a');
+                            var filename = xhr.getResponseHeader('Content-Disposition').split('filename=')[1].trim(); //get the name of the file
+                            var url = window.URL.createObjectURL(xhr.response);// create a tenporary link
+                            a.href = url; //define where to look to download
+                            a.download = filename; // what to download
+                            document.body.appendChild(a);
+                            a.click();  // Trigger the download
+                            window.URL.revokeObjectURL(url);  // Clean up - free space
+                        }
+                    };
+                }
+            }
+            xhr.send(); //send the request HTTP and execute everything
+        });
+
+        document.getElementById("take_video").addEventListener("click", function() {
+            var button = document.getElementById("take_video");
+            var check_time = document.getElementById("time_video").checked;
+            if (button.classList.contains("red")) {
+                var download = document.getElementById("download_checkbox_video").checked;
+                button.classList.remove("red");
+                var xhr = new XMLHttpRequest(); //create a HTTP solicitation
+                xhr.open("GET", "/stop_video");
+                if (download) 
+                {
+                    // Send an AJAX request to the Flask server to download the image
+                    xhr.responseType = 'blob'; // define the answer as binary
+                    xhr.onload = function() 
+                        { //and then execute:
+                        if (xhr.status === 200) 
+                            { //if was successeful
+                                // Create a temporary link element
+                                var a = document.createElement('a');
+                                var filename = xhr.getResponseHeader('Content-Disposition').split('filename=')[1].trim(); //get the name of the file
+                                var url = window.URL.createObjectURL(xhr.response);// create a tenporary link
+                                a.href = url; //define where to look to download
+                                a.download = filename; // what to download
+                                document.body.appendChild(a);
+                                a.click();  // Trigger the download
+                                window.URL.revokeObjectURL(url);  // Clean up - free space
+                            }
+                        };
+                } 
+                xhr.send();
+            } else {
+                button.classList.add("red");
+                var xhr = new XMLHttpRequest(); //create a HTTP solicitation
+                var text = document.getElementById("text_time_video").value;
+                if(check_time)
+                {
+                    xhr.open("POST", "/timer_video", true);
+                    xhr.setRequestHeader("Content-Type", "application/json");
+                    xhr.send(JSON.stringify({ text: text }));
+                }
+                else
+                {
+                    xhr.open("GET", "/start_video"); 
+                }
+                xhr.send();
+            }
+            });
+
+            document.getElementById("homefolder_button").addEventListener("click", function() {
+                var text = document.getElementById("Path_Text").value;
+                var xhr = new XMLHttpRequest(); //create a HTTP solicitation
+                xhr.open("POST", "/change_folder", true);
+                xhr.setRequestHeader("Content-Type", "application/json");
+                xhr.send(JSON.stringify({ text: text }));
+                xhr.send();
+            });
+
+            document.getElementById("reset_camera").addEventListener("click", function() { //when the button is pressed
+                var xhr = new XMLHttpRequest(); //create a HTTP solicitation
+                xhr.open("GET", "/reset_camera"); //execute the flask function reset_camera defined at .py
+                xhr.send(); //send the request HTTP and execute everything
+             });
+             
+             function show_gallery_page() {
+                var row_camera = document.getElementById('Page1');
+                row_camera.classList.add('hidden');
+                var row_gallery = document.getElementById('Page2');
+                row_gallery.classList.remove('hidden');
+                document.getElementById("Page2").style.display = "flex";
+                var row_options = document.getElementById('Page3');
+                row_options.classList.add('hidden');
+               // Call the Flask route to get the list of photos
+                var xhr = new XMLHttpRequest();
+                xhr.open("GET", "/get_photos_list");
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState == 4 && xhr.status == 200) {
+                        var photo_files = JSON.parse(xhr.responseText);
+                        var photoListHTML = "";
+                        photo_files.forEach(function(photo_file) {
+                            photoListHTML += '<li><a href="#" onclick="showPhoto(\'' + photo_file + '\')">' + photo_file + '</a></li>';
+                        });
+                        document.getElementById("photo-list").innerHTML = photoListHTML;
+                    }
+                };
+                xhr.send();
+            }
+
+            function show_camera_page() {
+                var row_camera = document.getElementById('Page1');
+                row_camera.classList.remove('hidden');
+                var row_gallery = document.getElementById('Page2');
+                row_gallery.classList.add('hidden');
+                document.getElementById("Page2").style.display = "none";
+                var row_options = document.getElementById('Page3');
+                row_options.classList.add('hidden');
+
+            }
+
+            function show_options_page() {
+                var row_camera = document.getElementById('Page1');
+                row_camera.classList.add('hidden');
+                var row_gallery = document.getElementById('Page2');
+                row_gallery.classList.add('hidden');
+                document.getElementById("Page2").style.display = "none";
+                var row_options = document.getElementById('Page3');
+                row_options.classList.remove('hidden');
+            }
+
+            function showPhoto(filename) 
+            {
+                var container = document.getElementById('photo-container');
+                container.innerHTML = '<img src="/photos/' + filename + '" style="max-width: 100%; max-height: 100%;">';
+            }
+
+            function handleEvent_photo(event) 
+            {
+                var outputBox = document.getElementById("output_photo");
+                // Append message to output text box
+                outputBox.value="";
+                outputBox.value = event.data + "\n";
+            }
+
+            // Create EventSource to listen for messages from Flask backend
+            var eventSource = new EventSource("/photo_status");
+            eventSource.onmessage = handleEvent_photo;
+
+            function handleEvent_video(event) 
+            {
+                var outputBox = document.getElementById("output_video");
+                // Append message to output text box
+                outputBox.value="";
+                outputBox.value = event.data + "\n";
+            }
+
+            // Create EventSource to listen for messages from Flask backend
+            var eventSource_video = new EventSource("/video_status");
+            eventSource_video.onmessage = handleEvent_video;
+            
+            function handleEvent_homefolder(event) 
+            {
+                var outputBox = document.getElementById("home_folder_tab");
+                // Append message to output text box
+                outputBox.value="";
+                outputBox.value = event.data + "\n";
+
+                outputBox = document.getElementById("home_folder_tab_principal");
+                // Append message to output text box
+                outputBox.value="";
+                outputBox.value = event.data + "\n";
+            }
+
+            // Create EventSource to listen for messages from Flask backend
+            var eventSource_homefolder = new EventSource("/homefolder_status");
+            eventSource_homefolder.onmessage = handleEvent_homefolder;
+            
+           
+    </script>
+
 </html>
