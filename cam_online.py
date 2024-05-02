@@ -188,7 +188,7 @@ def homefolder_status():
         while True:
            # print("Temp\n" + str(500))
             yield "data: {}\n\n".format("Folder: " + HOME_DIR)
-            time.sleep(5)  # Send status every 1 second
+            time.sleep(5)  # Send status every 5 second
             #time.sleep(1)  # Simulate delay
     return Response(generate(), mimetype='text/event-stream')
 
@@ -249,6 +249,7 @@ def recording(mutex):
             video_file.write(frame_date)
             
         video_file.release()
+        n_frames=0
         print("Ending video")
 
 n_frames=0
@@ -280,6 +281,7 @@ def recording_time(mutex):
                 video_file_name=get_data()+".avi"
                 video_file = cv2.VideoWriter(HOME_DIR+VIDEO_DIR+"/"+video_file_name, fourcc, fps, (res_x,res_y))
         video_file.release()
+        n_frames=0
         print("Ending video")
 
 #function that start the video recording
@@ -313,9 +315,11 @@ def timer_video():
 @app.route('/stop_video')
 def stop_video():
     global is_recording
+    global n_frames
     is_recording=False
     recording_thread.join()
     print("sending video: " + video_file_name)
+    n_frames=0
     return send_from_directory(HOME_DIR+VIDEO_DIR+"/" , video_file_name , as_attachment=True)
 
 #function that change the home_folder

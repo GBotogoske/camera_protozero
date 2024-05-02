@@ -3,126 +3,180 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PROTO-0! The coolest experiment</title>
+    <title>PROTO-0 - The Coolest Experiment</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        /* Define a CSS class for increasing font size */
-        .large-font {
-            font-size: 36px; /* Adjust font size as needed */
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f2f2f2;
+            color: #333;
         }
 
-        /* Define a CSS class for increasing button size */
-        .large-button {
-            font-size: 24px; /* Adjust font size as needed */
-            padding: 20px 40px; /* Adjust padding as needed */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
         }
-        .large-button.red {
-            background-color: red;
+
+        h1, h2, h3 {
+            color: #009688;
         }
-        .active {
+
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            font-size: 18px;
+            border: none;
+            border-radius: 5px;
+            background-color: #009688;
+            color: #fff;
+            text-align: center;
+            text-decoration: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .button:hover {
+            background-color: #00796b;
+        }
+
+        .blue-box {
+            background-color: #2196F3;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .blue-box h1 {
+        color: black; /* Change this color to your desired color */
+        }
+
+        .yellow-box {
+            background-color: #FFC107;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        #photo-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+        }
+
+        #photo-list {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 2px solid #333;
+            padding: 10px;
+            width: fit-content;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        input[type="checkbox"] {
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+
+        label {
+            font-size: 16px;
+        }
+        .active{
             display: block;
         }
-
-        .hidden {
+        .hidden{
             display: none;
         }
-        
+
+        #Page2 {
+        display: none; /* Initially hide the Page2 container */
+        flex-direction: row; /* Ensure flex items are in a row */
+        }
+
         #photo-list {
             overflow-y: auto; /* Add a vertical scrollbar when needed */
             max-height: 400px; /* Set a maximum height for the container */
             border: 2px solid black;
-            padding: 10px;
-            width: fit-content;
+            padding: 20px;
+            flex: 1; /* Occupy 1/3 of the space */
         }
 
         #photo-container {
             margin: auto;
-            width: 50%;
+            width: 100%;
             height: auto;
+            flex: 2; /* Occupy 2/3 of the space */
         }
-    
+
     </style>
 </head>
 <body>
-        <div id="Page1" class="container">
-            <div class="row">
-                <div class="col-lg-8 offset-lg-2">
-                    <!-- Apply the CSS class to your heading -->
-                    <h3 class="mt-5 large-font">PROTO-0 </h3>
-                    <img id="video_feed" src="{{ url_for('video_feed') }}" width="50%">
-                    <button id="reset_camera" class="large-button"> RESET!!!</button>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-lg-8 offset-lg-2">
-                    <!-- Add a button to take a picture -->
-                    <button id="take_picture" class="large-button">PHOTO!!!</button>
-                    <!-- Checkbox for download -->
-                    <input type="checkbox" id="download_checkbox" checked>
-                    <label for="download_checkbox">Download?</label><br>
-                    <input type="checkbox" id="timer_photo" unchecked>
-                    <label for="download_checkbox">Timer photos</label><br>
-                    <input type="text" id="text_time_photo_total" placeholder="Total time (Default time:10s)">
-                    <input type="text" id="text_time_photo_interval" placeholder="Interval between photos: (Default time:1s)">
-                    <textarea id="output_photo" rows="1" cols="100" readonly></textarea>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-lg-8 offset-lg-2">
-                    <!-- Add a button to take a picture -->
-                    <button id="take_video" class="large-button">VIDEO!!!</button>
-                    <!-- Checkbox for download -->
-                    <input type="checkbox" id="download_checkbox_video" checked>
-                    <label for="download_checkbox_video">Download?</label><br>
-                    <input type="checkbox" id="time_video" unchecked>
-                    <label for="time_video">Time video? Value in seconds</label><br>
-                    <input type="text" id="text_time_video" placeholder="Default time:10s">
-                    <textarea id="output_video" rows="1" cols="100" readonly></textarea>
-                </div>
-            </div>
-           
+    <div id="Page1" class="container">
+        <div class="blue-box">
+            <h1>PROTO-0</h1>
         </div>
+        <div class="yellow-box">
+            <img id="video_feed" src="{{ url_for('video_feed') }}" width="100%">
+            <button id="reset_camera" class="button">RESET!!!</button>
+        </div>
+        
+        <button id="take_picture" class="button">PHOTO!!!</button>
+        <input type="checkbox" id="download_checkbox" checked>
+        <label for="download_checkbox">Download?</label><br>
+        <input type="checkbox" id="timer_photo">
+        <label for="timer_photo">Timer photos</label><br>
+        <input type="text" id="text_time_photo_total" placeholder="Total time (Default time:10s)">
+        <input type="text" id="text_time_photo_interval" placeholder="Interval between photos: (Default time:1s)">
+        <textarea id="output_photo" rows="1" cols="100" readonly></textarea>
 
-        <div class="row">
-            <div id="page_camera">
-                <h1>Options</h1>
-                <button onclick="show_camera_page()">Camera</button>
-            </div>
-    
-            <div id="page_gallery">
-                <button onclick="show_gallery_page()">Gallery</button>
-            </div>
-    
-            <div id="page_options">
-                <button onclick="show_options_page()">Configurations</button>
-            </div>
+        <button id="take_video" class="button">VIDEO!!!</button>
+        <input type="checkbox" id="download_checkbox_video" checked>
+        <label for="download_checkbox_video">Download?</label><br>
+        <input type="checkbox" id="time_video">
+        <label for="time_video">Time video? Value in seconds</label><br>
+        <input type="text" id="text_time_video" placeholder="Default time:10s">
+        <textarea id="output_video" rows="1" cols="100" readonly></textarea>
+    </div>
+        
+
+        <h2>Options</h2>
+        <div>
+            <button class="button" onclick="show_camera_page()">Camera</button>
+            <button class="button" onclick="show_gallery_page()">Gallery</button>
+            <button class="button" onclick="show_options_page()">Configurations</button>
         </div>
+    
 
         <div id="Page2" class="container hidden">
-            <h1>Gallery</h1>
-            <div id="photo-container">
-            <!-- Container for displaying selected photo -->
-            </div>
-            <div id="photo-list">
-                <ul>
-                    {% for photo_file in photo_files %}
-                    <li><a href="#" onclick="showPhoto('{{ photo_file }}')">{{ photo_file }}</a></li>
-                    {% endfor %}
-                </ul>
-            </div>
+            <h2 class="gallery-heading">Gallery</h2>
+            <div id="photo-list"></div>
+            <div id="photo-container"></div>
         </div>
-       
-            
-        <div id="Page3" class="container hidden">
-            <div class="row">
-                <h1>Configuration</h1>
-                <input type="text" id="Path_Text" placeholder="Default folder: ./">
-                <button id="homefolder_button" class="large-button"> Change!!!</button>
-                <textarea id="home_folder_tab" rows="1" cols="100" readonly></textarea>
-            </div>
-        </div> 
-
         
+        
+    
+    <div id="Page3" class="container hidden">
+        <h2>Configuration</h2>
+        <input type="text" id="Path_Text" placeholder="Default folder: ./">
+        <button id="homefolder_button" class="button">Change!!!</button>
+        <textarea id="home_folder_tab" rows="1" cols="100" readonly></textarea>
+    </div> 
 </body>
+
     <script>
         // Add event listener to the button with ID take_picture
         document.getElementById("take_picture").addEventListener("click", function() { //when the button is pressed
@@ -233,6 +287,7 @@
                 row_camera.classList.add('hidden');
                 var row_gallery = document.getElementById('Page2');
                 row_gallery.classList.remove('hidden');
+                document.getElementById("Page2").style.display = "flex";
                 var row_options = document.getElementById('Page3');
                 row_options.classList.add('hidden');
                // Call the Flask route to get the list of photos
@@ -256,6 +311,7 @@
                 row_camera.classList.remove('hidden');
                 var row_gallery = document.getElementById('Page2');
                 row_gallery.classList.add('hidden');
+                document.getElementById("Page2").style.display = "none";
                 var row_options = document.getElementById('Page3');
                 row_options.classList.add('hidden');
 
@@ -266,6 +322,7 @@
                 row_camera.classList.add('hidden');
                 var row_gallery = document.getElementById('Page2');
                 row_gallery.classList.add('hidden');
+                document.getElementById("Page2").style.display = "none";
                 var row_options = document.getElementById('Page3');
                 row_options.classList.remove('hidden');
             }
