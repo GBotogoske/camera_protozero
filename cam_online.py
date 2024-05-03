@@ -449,7 +449,11 @@ def get_photo(filename):
 # Function to extract date from filename
 def extract_date(filename):
     date_str = filename[:-4]  # Remove the extension
-    return datetime.strptime(date_str, "%d%m%Y%H%M%S")
+    try:
+        key=datetime.strptime(date_str, "%d/%m/%Y-%H:%M:%S")
+    except:
+        key=date_str
+    return key
 
 # Sort the list of file names based on the photo dir
 @app.route('/get_photos_list')
