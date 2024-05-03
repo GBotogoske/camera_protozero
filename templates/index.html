@@ -17,13 +17,20 @@
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 0px;
         }
         
 
         .container_2 {
             display: flex;
-             align-items: center;
+            align-items: center;
+        }
+
+        .container_3
+        {
+            display: flex;
+            align-items: center;
+            margin-top: 20px; /* Adjust the value as needed */
         }
 
         .container_2 h4 {
@@ -34,6 +41,11 @@
             color: #009688;
         }
        
+        .button-container {
+            position: absolute;
+            top: 75px;
+            left: 1100px;
+        }
 
         .button {
             display: inline-block;
@@ -49,17 +61,36 @@
             transition: background-color 0.3s ease;
         }
 
+        .button_red
+        {
+            display: inline-block;
+            padding: 10px 20px;
+            font-size: 18px;
+            border: none;
+            border-radius: 5px;
+            background-color: red;
+            color: #fff;
+            text-align: center;
+            text-decoration: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease; 
+        }
+
         .button:hover {
             background-color: #00796b;
+        }
+        .button_red:hover {
+            background-color: #ff9900;
         }
 
         .blue-box {
             background-color: #2196F3;
             padding: 20px;
             border-radius: 10px;
-            margin-bottom: 20px;
+            margin-bottom: 2px;
             text-align: center;
         }
+
         .blue-box h1 {
         color: black; /* Change this color to your desired color */
         }
@@ -80,22 +111,20 @@
             margin-top: 5px;
             text-align: center;
             border: 2px solid black;
-            
             align-items: center;
+            width: 500px;
         }
-       
-
-        
+    
         .lightblue-box {
             background-color:greenyellow;
             padding: 20px;
             border-radius: 10px;
-            margin-bottom: 20px;
+            margin-bottom: 2px;
             text-align: center;
         }
 
         input[type="text"], textarea {
-            width: 70%;
+            width: 100%;
             padding: 5px;
             margin-bottom: 0px;
             border: 1px solid #ccc;
@@ -147,31 +176,28 @@
             overflow: hidden;
             padding-top: 0px;
             padding-bottom: 0px;
-            width: 75%;
+            width: 100%;
             display: inline-block;
             white-space: nowrap;
         }
        
     </style>
 </head>
+
 <body>
-
     <div id="Page_principal" class="container">
-        <div class="blue-box">
-            <h1>PROTO-0</h1>
-        </div>
-
-        <h2>Options</h2>
-        <div>
+        <div class="button-container">
             <button class="button" onclick="show_camera_page()">Camera</button>
             <button class="button" onclick="show_gallery_page()">Gallery</button>
             <button class="button" onclick="show_options_page()">Configurations</button>
         </div>
+        <div class="blue-box">
+            <h1>PROTO-0</h1>
+        </div>
+
         <div class="lightblue-box">
             <textarea id="home_folder_tab_principal" class = "no-scroll" rows="1" readonly overflow=" hidden"></textarea>
         </div>
-       
-
     </div>
 
     <div id="Page1" class="container">
@@ -179,70 +205,75 @@
             <img id="video_feed" src="{{ url_for('video_feed') }}" width="100%">
             <button id="reset_camera" class="button">RESET</button>
         </div>
-        <div class="container_2">
+
+        <div class="container_3">
             <button id="take_picture" class="button">PHOTO</button>
             <input type="checkbox" id="download_checkbox" unchecked>
             <label for="download_checkbox">Download to Browser</label><br>
             <input type="checkbox" id="timer_photo">
             <label for="timer_photo">Timer photos</label><br>
-         </div>
-        
-        <div class="check-box">
-            <div class="container_2">
-                <h4>Time duration of temporized photos (s):</h4>
-                    <input type="text" id="text_time_photo_total" placeholder="Total time (Default time:10s)">
-            </div>
         </div>
         
-        <div class="check-box">
-            <div class="container_2">
-                <h4>Time between each photo (s):</h4>
-                    <input type="text" id="text_time_photo_interval" placeholder="Interval between photos: (Default time:1s)">
-            </div>
-        </div>
-        
-        <textarea id="output_photo" rows="1" cols="100" readonly></textarea>
-
         <div class="container_2">
-            <button id="take_video" class="button">VIDEO</button>
+            <div class="check-box">
+                <h4>Time duration of temporized photos (s):</h4>
+            </div>
+
+            <input type="text" id="text_time_photo_total" placeholder="Total time (Default time:10s)">
+        </div>
+        
+        <div class="container_2">
+            <div class="check-box">
+                <h4>Time between each photo (s):</h4>
+            </div>
+
+                <input type="text" id="text_time_photo_interval" placeholder="Interval between photos: (Default time:1s)">
+        </div>
+        
+        <textarea id="output_photo" class = "no-scroll" rows="1" cols="100" readonly></textarea>
+
+        <div class="container_3">
+            <button id="take_video" class="button">START VIDEO</button>
+            <button id="stop_video_button" class="button_red">STOP VIDEO</button>
             <input type="checkbox" id="download_checkbox_video" unchecked>
             <label for="download_checkbox_video">Download to Browser</label><br>
             <input type="checkbox" id="time_video">
             <label for="time_video">Time video? </label><br>
-         </div>
+        </div>
         
-         <div class="check-box">
-            <div class="container_2">
+        <div class="container_2">
+            <div class="check-box">
                 <h4>Time duration for recording the video (s):</h4>
-                    <input type="text" id="text_time_video" placeholder="Default time:10s">
             </div>
+
+            <input type="text" id="text_time_video"  placeholder="Default time: 300s (5min)">
         </div>
         
-        <div class="check-box">
-            <div class="container_2">
+        <div class="container_2">
+            <div class="check-box">
                 <h4>Time of each video file (s):</h4>
-                    <input type="text" id="text_time_video_file" placeholder="Default time:1s">
             </div>
+
+            <input type="text" id="text_time_video_file" placeholder="Default time: 300s (5min)">
         </div>
         
-        <textarea id="output_video" rows="1" cols="100" readonly></textarea>
+        <textarea id="output_video" rows="1" cols="100" class = "no-scroll" readonly></textarea>
     </div>
         
 
-        <div id="Page2" class="container hidden">
-            <h2 class="gallery-heading">Gallery</h2>
-            <div id="photo-list"></div>
-            <div id="photo-container"></div>
-        </div>
+    <div id="Page2" class="container hidden">
+        <h2 class="gallery-heading">Gallery</h2>
+        <div id="photo-list"></div>
+        <div id="photo-container"></div>
+    </div>
         
-        
-    
     <div id="Page3" class="container hidden">
         <h2>Configuration</h2>
         <input type="text" id="Path_Text" placeholder="Default folder: ./">
         <button id="homefolder_button" class="button">Change</button>
         <textarea id="home_folder_tab" rows="1" cols="100" readonly></textarea>
     </div> 
+
 </body>
 
     <script>
@@ -321,19 +352,53 @@
                 button.classList.add("red");
                 var xhr = new XMLHttpRequest(); //create a HTTP solicitation
                 var text = document.getElementById("text_time_video").value;
+                var text_i = document.getElementById("text_time_video_file").value;
+                var data = {
+                    "text_total": text,
+                    "text_interval": text_i
+                };
                 if(check_time)
                 {
                     xhr.open("POST", "/timer_video", true);
                     xhr.setRequestHeader("Content-Type", "application/json");
-                    xhr.send(JSON.stringify({ text: text }));
+                    xhr.send(JSON.stringify({text:text,text_i:text_i}));
                 }
                 else
                 {
-                    xhr.open("GET", "/start_video"); 
+                    xhr.open("POST", "/start_video",true);
+                    xhr.setRequestHeader("Content-Type", "application/json");
+                    xhr.send(JSON.stringify({text:text,text_i:text_i})); 
                 }
                 xhr.send();
             }
-            });
+        });
+
+        document.getElementById("stop_video_button").addEventListener("click", function() {
+                var download = document.getElementById("download_checkbox_video").checked;
+                var xhr = new XMLHttpRequest(); //create a HTTP solicitation
+                xhr.open("GET", "/stop_video");
+                if (download) 
+                {
+                    // Send an AJAX request to the Flask server to download the image
+                    xhr.responseType = 'blob'; // define the answer as binary
+                    xhr.onload = function() 
+                        { //and then execute:
+                        if (xhr.status === 200) 
+                            { //if was successeful
+                                // Create a temporary link element
+                                var a = document.createElement('a');
+                                var filename = xhr.getResponseHeader('Content-Disposition').split('filename=')[1].trim(); //get the name of the file
+                                var url = window.URL.createObjectURL(xhr.response);// create a tenporary link
+                                a.href = url; //define where to look to download
+                                a.download = filename; // what to download
+                                document.body.appendChild(a);
+                                a.click();  // Trigger the download
+                                window.URL.revokeObjectURL(url);  // Clean up - free space
+                            }
+                        };
+                } 
+                xhr.send();
+             });
 
             document.getElementById("homefolder_button").addEventListener("click", function() {
                 var text = document.getElementById("Path_Text").value;
@@ -350,7 +415,7 @@
                 xhr.send(); //send the request HTTP and execute everything
              });
              
-             function show_gallery_page() {
+            function show_gallery_page() {
                 var row_camera = document.getElementById('Page1');
                 row_camera.classList.add('hidden');
                 var row_gallery = document.getElementById('Page2');
@@ -440,9 +505,7 @@
 
             // Create EventSource to listen for messages from Flask backend
             var eventSource_homefolder = new EventSource("/homefolder_status");
-            eventSource_homefolder.onmessage = handleEvent_homefolder;
-            
-           
+            eventSource_homefolder.onmessage = handleEvent_homefolder;   
     </script>
 
 </html>

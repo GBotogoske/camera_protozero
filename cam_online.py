@@ -34,10 +34,10 @@ HOME_DIR = DEFAULT_DIR
 mutex = threading.Lock()
 mutex_photo = threading.Lock()
 
-#return the date in the format DDMMYYYYHHMMSS
+#return the date in the format YYYY-MM-DD_HH-MM-SS
 def get_data():
     now=datetime.now()
-    dt_string = now.strftime("%d%m%Y%H%M%S")
+    dt_string = now.strftime("%Y-%m-%d_%H-%M-%S")
     return dt_string
 
 #return the date in the format DD/MM/YYYY-HH:MM:SS
@@ -141,7 +141,7 @@ def take_picture():
     
     print("Taking picture...")
     #ret, frame = camera.read()
-    name=get_data()+".jpg"
+    name=get_data()+"_proto-0_picture.jpg"
     cv2.imwrite(HOME_DIR+PHOTO_DIR+"/" + name , frame_date)
 
     return send_from_directory(HOME_DIR+PHOTO_DIR+"/" , name, as_attachment=True)
@@ -155,8 +155,7 @@ def photo_thread(mutex_photo):
     with mutex_photo:
         while now_time <= timer_total and is_taking_photo:
             print("Taking temporized pictures...")
-            #ret, frame = camera.read()
-            name=get_data()+".jpg"
+            name=get_data()+"_proto-0_timer_picture.jpg"
             cv2.imwrite(HOME_DIR+PHOTO_DIR+"/" + name , frame_date)
             now_time=now_time+timer_interval
             print(now_time)
@@ -243,7 +242,10 @@ def video_status():
         while True:
             time_recording=n_frames/fps
            # print("Temp\n" + str(500))
-            yield "data: {}\n\n".format("VIDEO RECORDING ON -- Total time: {}s -- Now time: {}s".format(default_video_time, time_recording) if is_recording else "VIDEO RECORDING OFF")
+            if timer_video_check==True:
+                yield "data: {}\n\n".format("VIDEO RECORDING ON -- Total time: {:.2f}s -- Now time: {:.2f}s -- File time: {:.2f}s".format(default_video_time, time_recording,default_video_time_file) if is_recording else "VIDEO RECORDING OFF")
+            else:
+                yield "data: {}\n\n".format("VIDEO RECORDING ON -- Total time: Forever -- Now time: {:.2f}s -- File time: {:.2f}s".format(time_recording,default_video_time_file) if is_recording else "VIDEO RECORDING OFF")
             time.sleep(1)  # Send status every 1 second
             #time.sleep(1)  # Simulate delay
     return Response(generate_video(), mimetype='text/event-stream')
@@ -256,22 +258,29 @@ video_file_name = None
 def recording(mutex):
     global n_frames
     global video_file_name
+    global timer_video_check
+    max_time=default_video_time_file #seconds
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
     video_file = cv2.VideoWriter()
     with mutex:
-        video_file_name=get_data()+".avi"
+        timer_video_check=False
+        video_file_name=get_data()+"_proto-0_video.avi"
         video_file = cv2.VideoWriter(HOME_DIR+VIDEO_DIR+"/"+video_file_name, fourcc, fps, (res_x,res_y))
         global is_recording 
         is_recording= True
+        n_frames_max=0
         print("Starting video...")
         while is_recording == True:
-            #if camera.isOpened():
-                #ret, frame = camera.read()
-                #if success==True:
             n_frames=n_frames+1
+            n_frames_max=n_frames_max+1
             time.sleep(1.0/fps)                
             video_file.write(frame_date)
-            
+            if(n_frames_max/fps>=max_time):
+                video_file.release()
+                n_frames_max=0
+                video_file_name=get_data()+"_proto-0_video.avi"
+                video_file = cv2.VideoWriter(HOME_DIR+VIDEO_DIR+"/"+video_file_name, fourcc, fps, (res_x,res_y))
+
         video_file.release()
         n_frames=0
         print("Ending video")
@@ -280,14 +289,16 @@ n_frames=0
 #thread for recording temporized videos
 def recording_time(mutex):
     global n_frames
+    global timer_video_check
     n_frames=0
-    max_time=60 #seconds
+    max_time=default_video_time_file #seconds
     n_frames_max=0
     global video_file_name
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
     video_file = cv2.VideoWriter()
     with mutex:
-        video_file_name=get_data()+".avi"
+        timer_video_check=True
+        video_file_name=get_data()+"_proto-0_timer_video.avi"
         video_file = cv2.VideoWriter(HOME_DIR+VIDEO_DIR+"/"+video_file_name, fourcc, fps, (res_x,res_y))
         global is_recording 
         is_recording= True
@@ -302,7 +313,7 @@ def recording_time(mutex):
             if(n_frames_max/fps>=max_time):
                 video_file.release()
                 n_frames_max=0
-                video_file_name=get_data()+".avi"
+                video_file_name=get_data()+"_proto-0_timer_video.avi"
                 video_file = cv2.VideoWriter(HOME_DIR+VIDEO_DIR+"/"+video_file_name, fourcc, fps, (res_x,res_y))
         video_file.release()
         n_frames=0
@@ -310,27 +321,46 @@ def recording_time(mutex):
 
 #function that start the video recording
 recording_thread = None
-@app.route('/start_video')
+@app.route('/start_video',methods=['POST'])
 def start_video():
     global recording_thread
+    global default_video_time_file
+    data = request.json
+    text_i=data['text_i']
+    try:
+        default_video_time_file = float(text_i)  # Convert the string to a floating-point number
+    except ValueError:
+        default_video_time_file = 10*60 
+    # Process the text here (you can modify parameters or perform any other action)
+
     recording_thread = threading.Thread(target=recording, args=(mutex,))
     recording_thread.start() #create a thread to record the video       
     return "True"
 
 #function that start the temporized video recording
-default_video_time=10
+default_video_time=5*60
+default_video_time_file=10*60
+timer_video_check=False
 @app.route('/timer_video', methods=['POST'])
 def timer_video():
     global default_video_time
+    global default_video_time_file
     global recording_thread
+    
     data = request.json
     text = data['text']
+    text_i=data['text_i']
     try:
         default_video_time = float(text)  # Convert the string to a floating-point number
     except ValueError:
-        default_video_time = 10 # Return 10 if the string is not a valid number
+        default_video_time = 5*60 # Return 5 if the string is not a valid number
+
+    try:
+        default_video_time_file = float(text_i)  # Convert the string to a floating-point number
+    except ValueError:
+        default_video_time_file = 10*60 # Return 5 if the string is not a valid number
     # Process the text here (you can modify parameters or perform any other action)
-    print(default_video_time)
+
     recording_thread = threading.Thread(target=recording_time, args=(mutex,))
     recording_thread.start() #create a thread to record the video       
     return "True"
@@ -409,7 +439,7 @@ def main(): #this is the main thread
         camera.set(cv2.CAP_PROP_FRAME_WIDTH, res_x)
         camera.set(cv2.CAP_PROP_FRAME_HEIGHT, res_y)
     create_dirs()
-    app.run(debug=False)
+    app.run(host='0.0.0.0',port=5000,debug=False)
 
 @app.route('/photos/<filename>')
 def get_photo(filename):
