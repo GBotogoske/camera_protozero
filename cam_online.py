@@ -16,12 +16,14 @@ import time
 #library numpy
 import numpy as np
 
+from gevent.pywsgi import WSGIServer
 from functions.useful_function import get_default_folder
 
 #Initialize the Flask app
 app = Flask(__name__)
 #camera name, check the name of your camera at /sys/class/video4linux/video(i)/name (OBRIGADO) 
-camera_name= "HD USB Camera"
+
+camera_name= "EasyCamera: EasyCamera"#"HD USB Camera"
 res_x=1280
 res_y=720
 font = cv2.FONT_HERSHEY_SIMPLEX #font to the date text
@@ -103,13 +105,15 @@ def generate_black():
     return img_
 
 
+
 success: bool
 frame = None
 frame_date = None
-#function that generate frame from time to time
-def gen_frames(): 
+
+def gen_frames_thread():
     global success
     global frame, frame_date 
+    global camera
     while True:
         if camera.isOpened():
             success, frame = camera.read()  # read the camera frame
@@ -118,18 +122,24 @@ def gen_frames():
         else:
             frame=generate_black()
             success=False
-        frame_date = put_date(frame)   
-        ret, buffer = cv2.imencode('.jpg', frame_date)
-        frame_bytes = buffer.tobytes()
+        frame_date = put_date(frame)
+        time.sleep(1/fps)   
+        
+
+#function that generate frame from time to time
+def gen_frames():
+    global frame_date 
+    while True:
+        try:
+            ret, buffer = cv2.imencode('.jpg', frame_date)
+            frame_bytes = buffer.tobytes()
+        except:
+            print("oi")
+            frame_bytes=0
         yield (b'--frame\r\n'
             b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')  # concat frame one by one and show result
-        time.sleep(0)
+        time.sleep(1/fps)
         
-#start function that creates the web interface defined at index.html            
-@app.route('/')
-def index():
-    return render_template('index.html')
-
 #function that return the real time video to the web interface
 @app.route('/video_feed')
 def video_feed():
@@ -252,7 +262,7 @@ def video_status():
 
 
 is_recording=False
-fps=24.0
+fps=30.0
 #theread for recording the video
 video_file_name = None
 def recording(mutex):
@@ -260,11 +270,11 @@ def recording(mutex):
     global video_file_name
     global timer_video_check
     max_time=default_video_time_file #seconds
-    fourcc = cv2.VideoWriter_fourcc(*'XVID')
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     video_file = cv2.VideoWriter()
     with mutex:
         timer_video_check=False
-        video_file_name=get_data()+"_proto-0_video.avi"
+        video_file_name=get_data()+"_proto-0_video.mp4"
         video_file = cv2.VideoWriter(HOME_DIR+VIDEO_DIR+"/"+video_file_name, fourcc, fps, (res_x,res_y))
         global is_recording 
         is_recording= True
@@ -278,7 +288,7 @@ def recording(mutex):
             if(n_frames_max/fps>=max_time):
                 video_file.release()
                 n_frames_max=0
-                video_file_name=get_data()+"_proto-0_video.avi"
+                video_file_name=get_data()+"_proto-0_video.mp4"
                 video_file = cv2.VideoWriter(HOME_DIR+VIDEO_DIR+"/"+video_file_name, fourcc, fps, (res_x,res_y))
 
         video_file.release()
@@ -294,11 +304,11 @@ def recording_time(mutex):
     max_time=default_video_time_file #seconds
     n_frames_max=0
     global video_file_name
-    fourcc = cv2.VideoWriter_fourcc(*'XVID')
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     video_file = cv2.VideoWriter()
     with mutex:
         timer_video_check=True
-        video_file_name=get_data()+"_proto-0_timer_video.avi"
+        video_file_name=get_data()+"_proto-0_timer_video.mp4"
         video_file = cv2.VideoWriter(HOME_DIR+VIDEO_DIR+"/"+video_file_name, fourcc, fps, (res_x,res_y))
         global is_recording 
         is_recording= True
@@ -313,7 +323,7 @@ def recording_time(mutex):
             if(n_frames_max/fps>=max_time):
                 video_file.release()
                 n_frames_max=0
-                video_file_name=get_data()+"_proto-0_timer_video.avi"
+                video_file_name=get_data()+"_proto-0_timer_video.mp4"
                 video_file = cv2.VideoWriter(HOME_DIR+VIDEO_DIR+"/"+video_file_name, fourcc, fps, (res_x,res_y))
         video_file.release()
         n_frames=0
@@ -426,21 +436,6 @@ def create_dirs():
     except:
         print("video dir already exists")
     
-
-cam_id=find_camera_id(camera_name) #find the id of camera based on his name on the linux interface
-def main(): #this is the main thread
-    global success
-    global camera
-    camera = cv2.VideoCapture(cam_id,cv2.CAP_V4L) #variable that reads the camera
-    if not camera.isOpened():
-        print("Error: Could not open camera.")
-        success=False
-    else:
-        camera.set(cv2.CAP_PROP_FRAME_WIDTH, res_x)
-        camera.set(cv2.CAP_PROP_FRAME_HEIGHT, res_y)
-    create_dirs()
-    app.run(host='0.0.0.0',port=5000,debug=False)
-
 @app.route('/photos/<filename>')
 def get_photo(filename):
     # Serve the requested photo file
@@ -468,6 +463,32 @@ def get_photos_list():
     return jsonify(photo_files)
 
 
+#start function that creates the web interface defined at index.html            
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+video_Thread=None
+def main(): #this is the main thread
+    global success
+    global camera
+    global video_Thread
+    camera = cv2.VideoCapture(cam_id,cv2.CAP_V4L) #variable that reads the camera
+    if not camera.isOpened():
+        print("Error: Could not open camera.")
+        success=False
+    else:
+        camera.set(cv2.CAP_PROP_FRAME_WIDTH, res_x)
+        camera.set(cv2.CAP_PROP_FRAME_HEIGHT, res_y)
+    create_dirs()
+    video_Thread = threading.Thread(target=gen_frames_thread)
+    video_Thread.start()
+    app.run(host='0.0.0.0',port=5000,debug=False)
+    #http_server = WSGIServer(('0.0.0.0', 5000), app)
+    #http_server.serve_forever()
+
+
+cam_id=find_camera_id(camera_name) #find the id of camera based on his name on the linux interface
 if __name__ == "__main__":
     main_thread = threading.Thread(target=main)  #create main theread than handles the web interface
     main_thread.start() # start the main thread
