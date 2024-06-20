@@ -16,14 +16,16 @@ import time
 #library numpy
 import numpy as np
 
-from gevent.pywsgi import WSGIServer
+#from gevent.pywsgi import WSGIServer
 from functions.useful_function import get_default_folder
+#compress video functions
+from functions.compression import compress_video_GB
 
 #Initialize the Flask app
 app = Flask(__name__)
 #camera name, check the name of your camera at /sys/class/video4linux/video(i)/name (OBRIGADO) 
 
-camera_name= "EasyCamera: EasyCamera"#"HD USB Camera"
+camera_name= "Integrated RGB Camera: Integrat" #"EasyCamera: EasyCamera"#"HD USB Camera"
 res_x=1280
 res_y=720
 font = cv2.FONT_HERSHEY_SIMPLEX #font to the date text
@@ -35,6 +37,7 @@ HOME_DIR = DEFAULT_DIR
 #to the video recording
 mutex = threading.Lock()
 mutex_photo = threading.Lock()
+mutex_compression = threading.Lock()
 
 #return the date in the format YYYY-MM-DD_HH-MM-SS
 def get_data():
@@ -263,19 +266,53 @@ def video_status():
 
 is_recording=False
 fps=30.0
+fps_video=24
+
+compression_thread=None
+event_compression = threading.Event()
+video_files_list=[]
+
+#thread for compression
+def compression_service(mutex_compression):
+    global event_compression
+    global video_files_list
+    compress_factor=5
+    name_list = []
+    while True:
+        event_compression.wait()
+        event_compression.clear()
+        with mutex_compression:
+            while len(video_files_list) >0:
+                name_list.append(video_files_list.pop(0))
+        for name in name_list:
+            compress_video_GB(HOME_DIR+VIDEO_DIR+"/"+name,compress_factor)
+            time.sleep(1)
+        name_list=[]
+
+
+#preparing comprresion
+def compression_init(name,mutex_compression,video_files_list,event_compression):
+    with mutex_compression:
+        video_files_list.append(name)
+        event_compression.set()
+
+
+
 #theread for recording the video
 video_file_name = None
-def recording(mutex):
+def recording(mutex,mutex_compression):
     global n_frames
     global video_file_name
     global timer_video_check
+    global video_files_list
+    global event_compression
     max_time=default_video_time_file #seconds
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     video_file = cv2.VideoWriter()
     with mutex:
         timer_video_check=False
         video_file_name=get_data()+"_proto-0_video.mp4"
-        video_file = cv2.VideoWriter(HOME_DIR+VIDEO_DIR+"/"+video_file_name, fourcc, fps, (res_x,res_y))
+        video_file = cv2.VideoWriter(HOME_DIR+VIDEO_DIR+"/"+video_file_name, fourcc, fps_video, (res_x,res_y))
         global is_recording 
         is_recording= True
         n_frames_max=0
@@ -283,49 +320,56 @@ def recording(mutex):
         while is_recording == True:
             n_frames=n_frames+1
             n_frames_max=n_frames_max+1
-            time.sleep(1.0/fps)                
+            time.sleep(1.0/fps_video)                
             video_file.write(frame_date)
-            if(n_frames_max/fps>=max_time):
+            if(n_frames_max/fps_video>=max_time):
                 video_file.release()
+                compression_init(video_file_name,mutex_compression,video_files_list,event_compression)
+                #compress_video_GB(HOME_DIR+VIDEO_DIR+"/"+video_file_name,5)
                 n_frames_max=0
                 video_file_name=get_data()+"_proto-0_video.mp4"
-                video_file = cv2.VideoWriter(HOME_DIR+VIDEO_DIR+"/"+video_file_name, fourcc, fps, (res_x,res_y))
+                video_file = cv2.VideoWriter(HOME_DIR+VIDEO_DIR+"/"+video_file_name, fourcc, fps_video, (res_x,res_y))
 
         video_file.release()
+        compression_init(video_file_name,mutex_compression,video_files_list,event_compression)
         n_frames=0
         print("Ending video")
 
 n_frames=0
 #thread for recording temporized videos
-def recording_time(mutex):
+def recording_time(mutex,mutex_compression):
     global n_frames
     global timer_video_check
     n_frames=0
     max_time=default_video_time_file #seconds
     n_frames_max=0
     global video_file_name
+    global video_files_list
+    global event_compression
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     video_file = cv2.VideoWriter()
     with mutex:
         timer_video_check=True
         video_file_name=get_data()+"_proto-0_timer_video.mp4"
-        video_file = cv2.VideoWriter(HOME_DIR+VIDEO_DIR+"/"+video_file_name, fourcc, fps, (res_x,res_y))
+        video_file = cv2.VideoWriter(HOME_DIR+VIDEO_DIR+"/"+video_file_name, fourcc, fps_video, (res_x,res_y))
         global is_recording 
         is_recording= True
         print("Starting video...")
         while is_recording == True:
-            time.sleep(1.0/fps)                
+            time.sleep(1.0/fps_video)                
             video_file.write(frame_date)
             n_frames=n_frames+1
             n_frames_max=n_frames_max+1
-            if(n_frames/fps>=default_video_time):
+            if(n_frames/fps_video>=default_video_time):
                 is_recording=False
-            if(n_frames_max/fps>=max_time):
+            if(n_frames_max/fps_video>=max_time):
                 video_file.release()
+                compression_init(video_file_name,mutex_compression,video_files_list,event_compression)                
                 n_frames_max=0
                 video_file_name=get_data()+"_proto-0_timer_video.mp4"
-                video_file = cv2.VideoWriter(HOME_DIR+VIDEO_DIR+"/"+video_file_name, fourcc, fps, (res_x,res_y))
+                video_file = cv2.VideoWriter(HOME_DIR+VIDEO_DIR+"/"+video_file_name, fourcc, fps_video, (res_x,res_y))
         video_file.release()
+        compression_init(video_file_name,mutex_compression,video_files_list,event_compression)        
         n_frames=0
         print("Ending video")
 
@@ -334,6 +378,7 @@ recording_thread = None
 @app.route('/start_video',methods=['POST'])
 def start_video():
     global recording_thread
+    global compression_thread
     global default_video_time_file
     data = request.json
     text_i=data['text_i']
@@ -343,8 +388,10 @@ def start_video():
         default_video_time_file = 10*60 
     # Process the text here (you can modify parameters or perform any other action)
 
-    recording_thread = threading.Thread(target=recording, args=(mutex,))
+    recording_thread = threading.Thread(target=recording, args=(mutex,mutex_compression))
     recording_thread.start() #create a thread to record the video       
+    compression_thread = threading.Thread(target=compression_service,args=(mutex_compression,))
+    compression_thread.start()
     return "True"
 
 #function that start the temporized video recording
@@ -355,6 +402,8 @@ timer_video_check=False
 def timer_video():
     global default_video_time
     global default_video_time_file
+    global compression_thread
+
     global recording_thread
     
     data = request.json
@@ -371,8 +420,10 @@ def timer_video():
         default_video_time_file = 10*60 # Return 5 if the string is not a valid number
     # Process the text here (you can modify parameters or perform any other action)
 
-    recording_thread = threading.Thread(target=recording_time, args=(mutex,))
-    recording_thread.start() #create a thread to record the video       
+    recording_thread = threading.Thread(target=recording_time, args=(mutex,mutex_compression))
+    recording_thread.start() #create a thread to record the video
+    compression_thread = threading.Thread(target=compression_service,args=(mutex_compression,))
+    compression_thread.start()       
     return "True"
 
 #function that stop the video recording
