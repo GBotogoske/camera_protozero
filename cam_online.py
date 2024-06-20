@@ -25,7 +25,7 @@ from functions.compression import compress_video_GB
 app = Flask(__name__)
 #camera name, check the name of your camera at /sys/class/video4linux/video(i)/name (OBRIGADO) 
 
-camera_name= "Integrated RGB Camera: Integrat" #"EasyCamera: EasyCamera"#"HD USB Camera"
+camera_name= "EasyCamera: EasyCamera" #"HD USB Camera"
 res_x=1280
 res_y=720
 font = cv2.FONT_HERSHEY_SIMPLEX #font to the date text
