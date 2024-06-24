@@ -25,7 +25,7 @@ from functions.compression import compress_video_GB
 app = Flask(__name__)
 #camera name, check the name of your camera at /sys/class/video4linux/video(i)/name (OBRIGADO) 
 
-camera_name= "EasyCamera: EasyCamera" #"HD USB Camera"
+camera_name= "Integrated RGB Camera: Integrat"#"EasyCamera: EasyCamera" #"HD USB Camera"
 res_x=1280
 res_y=720
 font = cv2.FONT_HERSHEY_SIMPLEX #font to the date text
@@ -534,9 +534,9 @@ def main(): #this is the main thread
     create_dirs()
     video_Thread = threading.Thread(target=gen_frames_thread)
     video_Thread.start()
-    app.run(host='0.0.0.0',port=5000,debug=False)
-    #http_server = WSGIServer(('0.0.0.0', 5000), app)
-    #http_server.serve_forever()
+    from waitress import serve
+    serve(app,host='0.0.0.0',port=8080, threads=10)
+    #app.run(host='0.0.0.0',port=5000,debug=False)
 
 
 cam_id=find_camera_id(camera_name) #find the id of camera based on his name on the linux interface
