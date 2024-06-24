@@ -16,7 +16,6 @@ import time
 #library numpy
 import numpy as np
 
-import socket
 
 #from gevent.pywsgi import WSGIServer
 from functions.useful_function import get_default_folder
@@ -26,8 +25,8 @@ from functions.compression import compress_video_GB
 #Initialize the Flask app
 app = Flask(__name__)
 #camera name, check the name of your camera at /sys/class/video4linux/video(i)/name (OBRIGADO) 
+#camera_name= "Integrated RGB Camera: Integrat"#"EasyCamera: EasyCamera" #"HD USB Camera"
 
-camera_name= "Integrated RGB Camera: Integrat"#"EasyCamera: EasyCamera" #"HD USB Camera"
 res_x=1280
 res_y=720
 font = cv2.FONT_HERSHEY_SIMPLEX #font to the date text
@@ -128,12 +127,13 @@ def gen_frames_thread():
             frame=generate_black()
             success=False
         frame_date = put_date(frame)
-        time.sleep(1/fps)   
+        #time.sleep(1/fps)   
         
 
 #function that generate frame from time to time
 def gen_frames():
     global frame_date 
+    i=1
     while True:
         try:
             ret, buffer = cv2.imencode('.jpg', frame_date)
@@ -143,6 +143,8 @@ def gen_frames():
             frame_bytes=0
         yield (b'--frame\r\n'
             b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')  # concat frame one by one and show result
+        #print(i)
+        #i=i+1
         time.sleep(1/fps)
         
 #function that return the real time video to the web interface
@@ -267,18 +269,18 @@ def video_status():
 
 
 is_recording=False
-fps=30.0
+fps=24
 fps_video=24
 
 compression_thread=None
 event_compression = threading.Event()
 video_files_list=[]
-
+compress_factor = None
 #thread for compression
 def compression_service(mutex_compression):
     global event_compression
     global video_files_list
-    compress_factor=5
+    global compress_factor
     name_list = []
     while True:
         event_compression.wait()
@@ -522,10 +524,14 @@ def index():
     return render_template('index.html')
 
 video_Thread=None
+my_port=None
+my_ip=None
 def main(): #this is the main thread
     global success
     global camera
     global video_Thread
+    global my_port
+    global my_ip
     camera = cv2.VideoCapture(cam_id,cv2.CAP_V4L) #variable that reads the camera
     if not camera.isOpened():
         print("Error: Could not open camera.")
@@ -536,19 +542,31 @@ def main(): #this is the main thread
     create_dirs()
     video_Thread = threading.Thread(target=gen_frames_thread)
     video_Thread.start()
+
     from waitress import serve
-    serve(app,host='0.0.0.0',port=8080, threads=10)
-        # Get the local IP address
-    hostname = socket.gethostname()
-    local_ip = socket.gethostbyname(hostname)
-
-    # Print the local IP address and port
-    print(f"Serving on http://{local_ip}:{port}")
     #app.run(host='0.0.0.0',port=5000,debug=False)
+    serve(app,host=my_ip,port=my_port, threads=100)
+   
 
+cam_id=None #find the id of camera based on his name on the linux interface
 
-cam_id=find_camera_id(camera_name) #find the id of camera based on his name on the linux interface
+import argparse
+
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='camera app parser')
+    parser.add_argument('-name', '--cam_name',default="EasyCamera: EasyCamera", type=str, help='Specify the camera name at /sys/class/video4linux/video(i)/name')
+    parser.add_argument('-f', '--frame_rate',default=24, type=float, help='Specify the camera frame rate')
+    parser.add_argument('-c', '--compress',default=5, type=float, help='Specify the compress factor for video')
+    parser.add_argument('-ip', '--ip',default='0.0.0.0', type=str, help='Specify the ip address')
+    parser.add_argument('-port', '--port',default=8080, type=int, help='Specify the port address')
+
+    args = parser.parse_args()
+    fps=args.frame_rate
+    cam_id =  find_camera_id(args.cam_name)
+    compress_factor = args.compress
+    my_ip=args.ip
+    my_port=args.port
+    
     main_thread = threading.Thread(target=main)  #create main theread than handles the web interface
     main_thread.start() # start the main thread
     
