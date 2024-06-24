@@ -16,6 +16,8 @@ import time
 #library numpy
 import numpy as np
 
+import socket
+
 #from gevent.pywsgi import WSGIServer
 from functions.useful_function import get_default_folder
 #compress video functions
@@ -536,6 +538,12 @@ def main(): #this is the main thread
     video_Thread.start()
     from waitress import serve
     serve(app,host='0.0.0.0',port=8080, threads=10)
+        # Get the local IP address
+    hostname = socket.gethostname()
+    local_ip = socket.gethostbyname(hostname)
+
+    # Print the local IP address and port
+    print(f"Serving on http://{local_ip}:{port}")
     #app.run(host='0.0.0.0',port=5000,debug=False)
 
 
