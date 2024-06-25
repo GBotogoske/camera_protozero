@@ -563,7 +563,7 @@ cam_id=None #find the id of camera based on his name on the linux interface
 import argparse
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='camera app parser')
+    parser = argparse.ArgumentParser(description='camera app parser', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('-name', '--cam_name',default="EasyCamera: EasyCamera", type=str, help='Specify the camera name at /sys/class/video4linux/video(i)/name')
     parser.add_argument('-f', '--frame_rate',default=24, type=float, help='Specify the camera frame rate')
     parser.add_argument('-c', '--compress',default=5, type=float, help='Specify the compress factor for video')
