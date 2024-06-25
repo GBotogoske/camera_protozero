@@ -4,11 +4,16 @@ Keyboard commands:
 q - quit
 p - take a picture
 
+the cam.py was the prototype
+It saves the pictures at the folder photo at same directory of the main script
+
 Now there is the web application version:
 To run: 
 python3 cam_online.py
 
-At both cases, it saves the pictures at the folder photo at same directory of the main script
+For more informations write -h for the parser info
+
+
 
 
 ----------------------------------
