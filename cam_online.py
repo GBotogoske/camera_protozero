@@ -22,6 +22,9 @@ from functions.useful_function import get_default_folder
 #compress video functions
 from functions.compression import compress_video_GB
 
+#get ip function
+from functions.ip_function import get_local_ip
+
 #Initialize the Flask app
 app = Flask(__name__)
 #camera name, check the name of your camera at /sys/class/video4linux/video(i)/name (OBRIGADO) 
@@ -526,6 +529,7 @@ def index():
 video_Thread=None
 my_port=None
 my_ip=None
+
 def main(): #this is the main thread
     global success
     global camera
@@ -543,6 +547,12 @@ def main(): #this is the main thread
     video_Thread = threading.Thread(target=gen_frames_thread)
     video_Thread.start()
 
+    if my_ip == "0.0.0.0":
+        local_ip = get_local_ip()
+        print(f"Bom Dia!!! Application running at IP: {local_ip}:{my_port}")
+    else:
+        print(f"Bom Dia!!! Application running at IP: {my_ip}:{my_port}")
+
     from waitress import serve
     #app.run(host='0.0.0.0',port=5000,debug=False)
     serve(app,host=my_ip,port=my_port, threads=100)
@@ -559,6 +569,7 @@ if __name__ == "__main__":
     parser.add_argument('-c', '--compress',default=5, type=float, help='Specify the compress factor for video')
     parser.add_argument('-ip', '--ip',default='0.0.0.0', type=str, help='Specify the ip address')
     parser.add_argument('-port', '--port',default=8080, type=int, help='Specify the port address')
+    parser.add_argument('-folder', '--home_folder',default=DEFAULT_DIR, type=str, help='Specify the home default folder for pictures and photos')
 
     args = parser.parse_args()
     fps=args.frame_rate
@@ -566,6 +577,11 @@ if __name__ == "__main__":
     compress_factor = args.compress
     my_ip=args.ip
     my_port=args.port
+
+    if os.path.exists(args.home_folder) and os.path.isdir(args.home_folder):
+        HOME_DIR=args.home_folder
+    else:
+        HOME_DIR=DEFAULT_DIR
     
     main_thread = threading.Thread(target=main)  #create main theread than handles the web interface
     main_thread.start() # start the main thread
