@@ -521,7 +521,7 @@ def get_photos_list():
 #start function that creates the web interface defined at index.html            
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('index.html',home_folder=HOME_DIR)
 
 video_Thread=None
 my_port=None
