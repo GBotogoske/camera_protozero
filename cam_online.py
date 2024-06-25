@@ -28,7 +28,7 @@ from functions.ip_function import get_local_ip
 #Initialize the Flask app
 app = Flask(__name__)
 #camera name, check the name of your camera at /sys/class/video4linux/video(i)/name (OBRIGADO) 
-#camera_name= "Integrated RGB Camera: Integrat"#"EasyCamera: EasyCamera" #"HD USB Camera"
+camera_name= None #"Integrated RGB Camera: Integrat"#"EasyCamera: EasyCamera" #"HD USB Camera"
 
 res_x=1280
 res_y=720
@@ -573,6 +573,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     fps=args.frame_rate
+    camera_name = args.cam_name
     cam_id =  find_camera_id(args.cam_name)
     compress_factor = args.compress
     my_ip=args.ip
